@@ -13,32 +13,32 @@ NEXUS combines a capacity-bounded Working Memory, a graph-based Semantic Palace,
 
 ## Architecture
 
-```
+```text
                            ┌─────────────────────────────────┐
-                           │     Asynchronous Consolidation   │
-                           │  ┌───────────┐  ┌────────────┐  │
-                           │  │  Spaced    │  │   Skill    │  │
-                           │  │ Repetition │  │ Abstraction│  │
-                           │  └─────┬─────┘  └─────┬──────┘  │
-                           │        └───────┬───────┘         │
-                           └────────────────┼─────────────────┘
+                           │    Asynchronous Consolidation   │
+                           │      (8 Background Processes)   │
+                           │  • Chunking      • Cross-Ref.   │
+                           │  • Conflict Res. • Skill Ext.   │
+                           │  • Forgetting    • Spaced Rep.  │
+                           │  • Reflection    • Defragment.  │
+                           └────────────────┬────────────────┘
                                             │ background
-  ┌──────────┐   ┌──────────┐   ┌──────────▼──────────┐   ┌──────────┐
+  ┌──────────┐   ┌──────────┐   ┌───────────▼─────────┐   ┌──────────┐
   │  Input   │──▶│ Attention │──▶│   Episode Buffer    │──▶│ Semantic │
   │  Text    │   │   Gate    │   │  (append-only log)  │   │  Palace  │
   └──────────┘   │ (salience │   └─────────────────────┘   │  Graph   │
                  │  filter)  │                              │ G=(V,E)  │
                  └──────────┘                              └────┬─────┘
                                                                 │
-  ┌──────────┐   ┌──────────┐   ┌───────────────────┐          │
-  │  Query   │──▶│ Retrieval│──▶│  Working Memory    │◀─────────┘
-  │          │   │  Engine   │   │  (7 ± 2 slots)    │
+  ┌──────────┐   ┌──────────┐   ┌───────────────────┐           │
+  │  Query   │──▶│ Retrieval│──▶│  Working Memory   │◀──────────┘
+  │          │   │  Engine  │   │   (7 ± 2 slots)   │
   └──────────┘   │ Q(v) =   │   └───────────────────┘
                  │ β₁cos +  │
-                 │ β₂decay +│   ┌───────────────────┐
-                 │ β₃freq   │──▶│   Meta-Memory      │
-                 └──────────┘   │  (confidence map)  │
-                                └───────────────────┘
+                 │ β₂decay+ │   ┌───────────────────┐
+                 │ β₃freq + │──▶│    Meta-Memory    │
+                 │ β₄sal    │   │ (confidence map)  │
+                 └──────────┘   └───────────────────┘
 ```
 
 **Core idea:** Fast, heuristic encoding (System 1) handles real-time ingestion, while slow, analytical consolidation (System 2) runs asynchronously in the background — inspired by human Dual-Process Theory.
