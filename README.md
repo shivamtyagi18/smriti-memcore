@@ -257,11 +257,12 @@ nexus-memory/
 │   ├── vector_store.py    # Vector persistence
 │   ├── llm_interface.py   # Multi-provider LLM connector (Ollama/OpenAI/Anthropic/Gemini)
 │   └── metrics.py         # Observability: counters, gauges, histograms, Prometheus export
-├── tests/                 # 154 tests across 13 files
+├── tests/                 # 159 tests across 13 files
 ├── baselines/             # Baseline implementations for comparison
 ├── benchmarks/            # Benchmark harness & scripts
 ├── examples/              # Usage examples
 ├── paper/                 # IEEE research paper (LaTeX + Markdown)
+│   └── figures/           # Benchmark charts and UI diagrams
 ├── pyproject.toml
 ├── CHANGELOG.md
 ├── LICENSE
