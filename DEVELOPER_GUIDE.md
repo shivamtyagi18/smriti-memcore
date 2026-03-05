@@ -44,22 +44,22 @@ This is the "slow", analytical, LLM-driven heart of NEXUS. It runs in an isolate
 3. **`consolidation.py` (The Engine):** Executes up to 8 distinct processes sequentially, depending on the requested depth (`LIGHT` vs `FULL`).
 
 #### The 8 Consolidation Processes:
-*   **Process 1: Chunking (`_chunk_episodes`)**
-    Extracts raw `Episodes` from the database and prompts the LLM (`llm_interface.py`) to convert colloquial dialogue into atomic, context-independent factual strings.
-*   **Process 2: Conflict Resolution (`_detect_conflicts`)**
+*   **Process 1: Chunking (`_process_chunking`)**
+    Extracts raw `Episodes` from the database and prompts the LLM (`llm_interface.py`) to convert colloquial dialogue into atomic, context-independent factual strings, integrating them into the `SemanticPalace`.
+*   **Process 2: Conflict Resolution (`_process_conflict_resolution`)**
     Searches the `SemanticPalace` for existing memories that contradict the new chunks (e.g., "User likes Java" vs "User now likes Python"). Uses the LLM to write a superseding memory, marking the old one as `SUPERSEDED`.
-*   **Process 3: Integration/Placement (`_integrate_memories`)**
-    Takes the resolved facts, embeds them via `VectorStore`, and searches the `SemanticPalace` for the semantically closest `Room`. If no room is close enough, it creates a new one. It instantiates the final `Memory` dataclass and links it to the room.
-*   **Process 4: Reflection (`_generate_reflections`)**
+*   **Process 3: Forgetting (`_process_forgetting`)**
+    Scans for `Memories` whose strength has decayed below the `strength_hard_threshold`. If not explicitly `PINNED`, removes the full memory and replaces it with a highly compressed `MemoryTombstone` to save space.
+*   **Process 4: Reflection (`_process_reflection`)**
     Looks at groups of related active memories and asks the LLM to deduce higher-level insights (e.g., *Fact 1 + Fact 2 → Insight A*).
-*   **Process 5: Cross-Referencing (`_cross_reference`)**
+*   **Process 5: Cross-Referencing (`_process_cross_reference`)**
     Computes pairwise vector similarities between all `Room` centroids in the palace. If two disparate rooms are semantically close, it writes a `TypedEdge` connecting them, enabling multi-hop associative retrieval later.
-*   **Process 6: Skill Extraction (`_extract_skills`)**
+*   **Process 6: Skill Extraction (`_process_skill_extraction`)**
     *Experimental.* Scans for repeated procedural actions or coding patterns and saves them to the Skill Vault as reusable tools.
-*   **Process 7: Spaced Repetition (`_spaced_repetition_review`)**
+*   **Process 7: Spaced Repetition (`_process_spaced_repetition`)**
     Finds memories that are due for review based on the Ebbinghaus forgetting curve. Uses the LLM to test the agent on these facts; success reinforces the memory, failure accelerates decay.
-*   **Process 8: Defragmentation & Forgetting (`_defragment_and_forget`)**
-    Garbage collection. Merges small, highly similar `Rooms`. Scans for `Memories` whose strength has decayed below the `strength_hard_threshold` and replaces them with a highly compressed `MemoryTombstone` to save space.
+*   **Process 8: Defragmentation (`_process_defragmentation`)**
+    Garbage collection for graph structure. Merges small or highly overlapping `Rooms` to prevent fragmentation of the `SemanticPalace`.
 
 ### Error Handling
 Each of the 8 processes is individually wrapped in a `try/except` block. If the local LLM times out during Process 4 (Reflection), Process 5 (Cross-Referencing) will still execute perfectly over the geometry of the graph.
