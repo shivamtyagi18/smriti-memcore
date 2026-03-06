@@ -52,3 +52,6 @@ paper2.txt
 .gemini/
 .agent/
 _agent/
+
+# Test Databases
+langchain_nexus_db/

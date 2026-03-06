@@ -4,12 +4,11 @@ Allows NEXUS to be used natively as a BaseChatMemory or BaseMemory component
 in any LangChain agent or chain.
 """
 
-from typing import Dict, Any, List
-import warnings
+from typing import List, Dict, Any
 
 try:
-    from langchain_core.memory import BaseMemory
-    from pydantic import Field
+    from langchain_core.chat_history import BaseChatMessageHistory
+    from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 except ImportError:
     raise ImportError(
         "To use the NEXUS LangChain integration, you must install langchain-core:\n"
@@ -18,79 +17,58 @@ except ImportError:
 
 from nexus.core import NEXUS
 
-class NexusLangChainMemory(BaseMemory):
+class NexusLangChainHistory(BaseChatMessageHistory):
     """
-    A LangChain memory class backed by the NEXUS Dual-Process Architecture.
+    A LangChain message history backed by the NEXUS Dual-Process Architecture.
     
-    This replaces standard ConversationBufferMemory and provides capacity-bounded 
-    working memory, semantic palace routing, and asynchronous background consolidation,
-    saving thousands of tokens while improving factual recall accuracy.
+    This provides capacity-bounded working memory, semantic palace routing, 
+    and asynchronous background consolidation, saving thousands of tokens 
+    while improving factual recall accuracy.
     """
-    nexus_client: NEXUS = Field(description="The active NEXUS instance.")
-    memory_key: str = "history"
-    human_prefix: str = "Human"
-    ai_prefix: str = "AI"
+    nexus_client: NEXUS
+    session_id: str
     top_k: int = 5
     
+    def __init__(self, nexus_client: NEXUS, session_id: str = "default", top_k: int = 5):
+        self.nexus_client = nexus_client
+        self.session_id = session_id
+        self.top_k = top_k
+        self._local_history: List[BaseMessage] = []
+
     @property
-    def memory_variables(self) -> List[str]:
-        """Return the keys this memory class will add to the prompt."""
-        return [self.memory_key]
-
-    def load_memory_variables(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
+    def messages(self) -> List[BaseMessage]:
         """
-        Return the relevant history for the current input.
-        This queries the NEXUS semantic palace (System 1 + System 2).
+        Return the relevant history.
+        This queries the NEXUS semantic palace (System 1 + System 2) using recent local history as context.
         """
-        # Usually 'input' or 'human_input' is passed. 
-        # Pick the first string value as the query to retrieve context.
-        query = ""
-        for v in inputs.values():
-            if isinstance(v, str):
-                query = v
-                break
-                
-        if not query:
-            return {self.memory_key: ""}
-
-        # Fetch memories using NEXUS
-        memories = self.nexus_client.recall(query, top_k=self.top_k)
+        if not self._local_history:
+            return []
+            
+        # Get the most recent user query to fetch context
+        last_query = self._local_history[-1].content if self._local_history else "Hello"
         
-        # Format for the LLM prompt
-        if not memories:
-            return {self.memory_key: ""}
+        # Fetch long-term memories using NEXUS
+        memories = self.nexus_client.recall(str(last_query), top_k=self.top_k)
+        
+        # Format for the LLM prompt (Injecting Long-Term Memory as System Context)
+        if memories:
+            context_str = "Relevant Long-Term Memories:\n" + "\n".join(f"- {m}" for m in memories)
+            # Prepend context to the local conversational window
+            return [AIMessage(content=context_str)] + self._local_history
             
-        context_str = "Relevant Long-Term Memories:\n"
-        for mem in memories:
-            context_str += f"- {mem}\n"
-            
-        return {self.memory_key: context_str}
+        return self._local_history
 
-    def save_context(self, inputs: Dict[str, Any], outputs: Dict[str, str]) -> None:
+    def add_message(self, message: BaseMessage) -> None:
         """
-        Save the context from this conversation iteration to NEXUS.
+        Save a message to this conversation iteration and ingest into NEXUS.
         This feeds the Episode Buffer (System 1) instantly.
         """
-        # Get user input
-        user_msg = ""
-        for v in inputs.values():
-            if isinstance(v, str):
-                user_msg = v
-                break
-                
-        # Get AI output
-        ai_msg = ""
-        for v in outputs.values():
-            if isinstance(v, str):
-                ai_msg = v
-                break
-
-        if user_msg:
-            self.nexus_client.encode(f"{self.human_prefix}: {user_msg}", auto_consolidate=True)
-            
-        if ai_msg:
-            self.nexus_client.encode(f"{self.ai_prefix}: {ai_msg}", auto_consolidate=True)
+        self._local_history.append(message)
+        
+        # Ingest into NEXUS Long-Term Memory
+        prefix = "Human: " if isinstance(message, HumanMessage) else "AI: "
+        self.nexus_client.encode(f"{prefix} {message.content}", auto_consolidate=True)
 
     def clear(self) -> None:
-        """Clear memory contents. (Not strictly supported for persistent long-term storage)."""
-        warnings.warn("clear() is ignored by NexusLangChainMemory as NEXUS is a persistent archival storage layer.")
+        """Clear the local session window. (Does not clear long-term archival NEXUS storage)."""
+        self._local_history = []

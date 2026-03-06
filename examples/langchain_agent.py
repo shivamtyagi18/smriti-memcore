@@ -2,56 +2,62 @@
 Example: Using NEXUS with LangChain
 
 This script demonstrates how to plug the NEXUS Dual-Process memory architecture 
-natively into a LangChain ConversationChain.
+natively into a LangChain chain using LCEL.
 """
 
-from langchain.chains import ConversationChain
 from langchain_openai import ChatOpenAI
-from langchain.prompts import PromptTemplate
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.runnables.history import RunnableWithMessageHistory
 
-from nexus.core import NEXUS
-from nexus.integrations.langchain_memory import NexusLangChainMemory
+from nexus.core import NEXUS, NexusConfig
+from nexus.integrations.langchain_memory import NexusLangChainHistory
 
 def main():
     print("Initialize NEXUS Memory Engine...")
-    nexus_engine = NEXUS(storage_path="./langchain_nexus_db")
+    config = NexusConfig(storage_path="./langchain_nexus_db", llm_model="gpt-4o-mini")
+    nexus_engine = NEXUS(config=config)
     
-    print("Wrapping NEXUS as a LangChain BaseMemory component...")
-    nexus_memory = NexusLangChainMemory(nexus_client=nexus_engine, top_k=3)
+    print("Wrapping NEXUS as a LangChain BaseChatMessageHistory component...")
+    nexus_history = NexusLangChainHistory(nexus_client=nexus_engine, session_id="test_session", top_k=3)
     
     # Standard LangChain LLM setup
     llm = ChatOpenAI(temperature=0.7, model="gpt-4o-mini")
     
-    # Custom prompt that expects the {history} key from NexusLangChainMemory
-    template = """The following is a friendly conversation between a human and an AI.
-The AI is talkative and provides lots of specific details from its context. 
-If the AI does not know the answer, it truthfully says it does not know.
-
-{history}
-
-Human: {input}
-AI:"""
-    PROMPT = PromptTemplate(input_variables=["history", "input"], template=template)
+    # Modern LangChain 0.3+ ChatPromptTemplate
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", "You are a helpful memory-augmented AI. Use the provided context if needed."),
+        MessagesPlaceholder(variable_name="history"),
+        ("human", "{input}")
+    ])
     
-    conversation = ConversationChain(
-        llm=llm,
-        prompt=PROMPT,
-        memory=nexus_memory,
-        verbose=True
+    chain = prompt | llm
+    
+    # Bind the NEXUS history to the chain
+    chain_with_history = RunnableWithMessageHistory(
+        chain,
+        lambda session_id: nexus_history,
+        input_messages_key="input",
+        history_messages_key="history"
     )
     
+    # Helper to run the chain
+    def chat(user_input: str):
+        print(f"Human: {user_input}")
+        response = chain_with_history.invoke(
+            {"input": user_input},
+            config={"configurable": {"session_id": "test_session"}}
+        )
+        print(f"AI: {response.content}\n")
+        return response.content
+
     # Interact with the agent
     print("\n--- Conversation Start ---")
-    response1 = conversation.predict(input="Hi, my name is Alex and I'm a machine learning engineer focusing on computer vision.")
-    print(f"AI: {response1}\n")
-    
-    response2 = conversation.predict(input="I really prefer using PyTorch over TensorFlow for my personal projects.")
-    print(f"AI: {response2}\n")
+    chat("Hi, my name is Alex and I'm a machine learning engineer focusing on computer vision.")
+    chat("I really prefer using PyTorch over TensorFlow for my personal projects.")
     
     # The agent will recall previous turns using NEXUS fast vector search 
     # and working memory contextual priming natively in the background.
-    response3 = conversation.predict(input="Can you remind me what my job is and what framework I prefer?")
-    print(f"AI: {response3}\n")
+    chat("Can you remind me what my job is and what framework I prefer?")
     
     print("--- Conversation End ---")
     
