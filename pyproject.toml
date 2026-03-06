@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nexus-memory"
-version = "0.1.7"
+version = "0.1.8"
 description = "A neuro-inspired memory architecture for AI agents — combines a Semantic Palace graph, capacity-bounded Working Memory, and asynchronous consolidation."
 readme = "README.md"
 license = {text = "MIT"}
@@ -41,6 +41,9 @@ dev = [
 ]
 faiss = [
     "faiss-cpu>=1.7.0",
+]
+langchain = [
+    "langchain-core>=0.3.0",
 ]
 benchmarks = [
     "matplotlib>=3.7.0",
