@@ -97,10 +97,11 @@ class LLMInterface:
         model: Optional[str] = None,
         system: Optional[str] = None,
         temperature: float = 0.1,
+        max_tokens: int = 4096,
     ) -> Dict[str, Any]:
         """Generate and parse JSON output from the LLM."""
         json_system = (system or "") + "\nRespond ONLY with valid JSON. No markdown, no explanation."
-        response = self.generate(prompt, model=model, system=json_system, temperature=temperature)
+        response = self.generate(prompt, model=model, system=json_system, temperature=temperature, max_tokens=max_tokens)
 
         # Check for LLM error before parsing
         if response.error:

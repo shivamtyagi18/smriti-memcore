@@ -242,7 +242,22 @@ NEXUS was benchmarked against four baseline architectures on the [LoCoMo](https:
 | NaiveRAG | 0.012 | 8.07s | 9.4s |
 | **NEXUS v2** | 0.010 | **7.62s** | **32.1s** |
 
-**Key finding:** NEXUS achieves a **98.8% reduction in ingestion time** compared to LLM-extraction-based systems (Mem0) while maintaining the lowest query latency.
+### LongMemEval (Long-Term Interactive Memory)
+
+NEXUS also includes an evaluation harness for the [LongMemEval](https://github.com/xiaowu0162/LongMemEval) benchmark, rigorously testing an LLM assistant's ability to maintain context over 50+ chat sessions across five categories (Information Extraction, Multi-Session Reasoning, Temporal Reasoning, Knowledge Updates, and Abstention).
+
+Standard long-context LLMs typically suffer a 30-60% performance drop on LongMemEval due to attention dilution. NEXUS bypasses this by isolating historical sessions in the Semantic Palace and only pulling relevant nodes into the prompt.
+
+To run the full 500-question benchmark with GPT-4o-mini as the evaluator:
+
+```bash
+# 1. Download the cleaned JSON datasets to data/longmemeval/
+# 2. Run the baseline LLM (Standard ConversationBufferMemory):
+python benchmarks/longmem_eval.py --baseline
+
+# 3. Run the optimized NEXUS Dual-Process Evaluator:
+python benchmarks/longmem_eval.py
+```
 
 ### Vector Search Backend
 

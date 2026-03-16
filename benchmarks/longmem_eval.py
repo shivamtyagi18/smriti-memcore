@@ -1,0 +1,247 @@
+import os
+import json
+import time
+import argparse
+import tempfile
+import shutil
+from typing import Dict, Any, List
+
+# LCEL and LangChain imports
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.runnables.history import RunnableWithMessageHistory
+from langchain_core.messages import HumanMessage, AIMessage
+
+# NEXUS imports
+from nexus.core import NEXUS, NexusConfig
+from nexus.integrations.langchain_memory import NexusLangChainHistory
+
+# Simple exact/fuzzy match for evaluation
+def compute_accuracy(prediction: str, ground_truth: str) -> float:
+    # A robust LLM-as-a-judge is preferred, but for this script we do string inclusion.
+    # LongMemEval answers are usually specific entities.
+    pred_lower = prediction.lower()
+    gt_lower = ground_truth.lower()
+    
+    # Simple check if the ground truth is somewhere in the prediction
+    if gt_lower in pred_lower:
+        return 1.0
+        
+    return 0.0
+
+from datetime import datetime
+from nexus.models import Episode, SalienceScore, MemorySource
+
+def process_case_nexus(test_case: Dict[str, Any], temp_dir: str) -> Dict[str, Any]:
+    """Runs a single LongMemEval case through a NEXUS-augmented LangChain agent."""
+    
+    # 1. Initialize NEXUS in a temporary isolation directory so nothing leaks between cases
+    db_path = os.path.join(temp_dir, f"nexus_db_{test_case['question_id']}")
+    config = NexusConfig(storage_path=db_path)
+    nexus_engine = NEXUS(config=config)
+    
+    # 2. Setup LangChain Environment
+    nexus_history = NexusLangChainHistory(nexus_client=nexus_engine, session_id="eval_session", top_k=5)
+    
+    # 3. Ingest the haystack sessions directly into LangChain history to emulate an integration
+    # (Since we just want to load the history into NEXUS, we can push it onto the history object)
+    sessions = test_case.get('haystack_sessions', [])
+    
+    print(f"[{test_case['question_id']}] Ingesting {len(sessions)} chat sessions into NEXUS...")
+    for i, session in enumerate(sessions):
+        for msg in session:
+            role = msg.get('role')
+            content = msg.get('content', '')
+            
+            prefix = "Human: " if role == "user" else "AI: "
+            
+            # Inject directly as raw memory without spending LLM API credits to compute salience scores
+            ep = Episode(
+                content=f"{prefix} {content}",
+                timestamp=datetime.now(),
+                salience=SalienceScore(surprise=0.8, relevance=0.8, emotional=0.5, novelty=0.8, utility=0.8),
+                source=MemorySource.DIRECT
+            )
+            nexus_engine.episode_buffer.add(ep)
+            
+        if (i + 1) % 10 == 0:
+            print(f"  Ingested {i+1}/{len(sessions)} sessions into episodic buffer...")
+                
+    # Consolidate ONCE at the end of all history to build the graph
+    print("  Triggering single batch consolidation...")
+    nexus_engine.consolidate(depth="full")
+        
+    # 4. Create the Chat Chain to answer the final question
+    llm = ChatOpenAI(temperature=0.0, model="gpt-4o-mini") # deterministic evaluation
+    
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", "You are a helpful assistant with a perfect long-term memory. Use your recalled context to answer the user's question directly and concisely."),
+        MessagesPlaceholder(variable_name="history"),
+        ("human", "{input}")
+    ])
+    
+    chain = prompt | llm
+    chain_with_history = RunnableWithMessageHistory(
+        chain,
+        lambda session_id: nexus_history,
+        input_messages_key="input",
+        history_messages_key="history"
+    )
+    
+    # 5. Ask the specific test question
+    question = test_case['question']
+    ground_truth = test_case['answer']
+    
+    start_time = time.time()
+    response = chain_with_history.invoke(
+        {"input": question},
+        config={"configurable": {"session_id": "eval_session"}}
+    )
+    latency = time.time() - start_time
+    
+    prediction = response.content
+    accuracy = compute_accuracy(prediction, ground_truth)
+    
+    print(f"  Q: {question}")
+    print(f"  Expected: {ground_truth}")
+    print(f"  NEXUS Answer: {prediction}")
+    print(f"  Accuracy: {accuracy} (latency: {latency:.2f}s)\n")
+    
+    return {
+        "question_id": test_case['question_id'],
+        "question_type": test_case['question_type'],
+        "accuracy": accuracy,
+        "latency": latency,
+        "prediction": prediction,
+        "ground_truth": ground_truth
+    }
+    
+
+from langchain_community.chat_message_histories import ChatMessageHistory
+
+def process_case_baseline(test_case: Dict[str, Any]) -> Dict[str, Any]:
+    """Runs a single LongMemEval case through a standard LangChain agent (Full Context)."""
+    
+    # 1. Setup Standard LangChain Memory (Infinite Buffer)
+    history = ChatMessageHistory()
+    
+    # 2. Ingest histories directly
+    sessions = test_case.get('haystack_sessions', [])
+    print(f"[{test_case['question_id']}] Ingesting {len(sessions)} chat sessions into standard LLM context...")
+    
+    for session in sessions:
+        for msg in session:
+            role = msg.get('role')
+            content = msg.get('content', '')
+            if role == 'user':
+                history.add_user_message(content)
+            elif role == 'assistant':
+                history.add_ai_message(content)
+                
+    # 3. Create Chain
+    llm = ChatOpenAI(temperature=0.0, model="gpt-4o-mini")
+    
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", "You are a helpful assistant. Use your recalled context to answer the user's question directly and concisely."),
+        MessagesPlaceholder(variable_name="history"),
+        ("human", "{input}")
+    ])
+    
+    chain = prompt | llm
+    chain_with_history = RunnableWithMessageHistory(
+        chain,
+        lambda session_id: history,
+        input_messages_key="input",
+        history_messages_key="history"
+    )
+    
+    # 4. Ask the test question
+    question = test_case['question']
+    ground_truth = test_case['answer']
+    
+    start_time = time.time()
+    response = chain_with_history.invoke(
+        {"input": question},
+        config={"configurable": {"session_id": "eval_session_baseline"}}
+    )
+    latency = time.time() - start_time
+    
+    prediction = response.content
+    accuracy = compute_accuracy(prediction, ground_truth)
+    
+    print(f"  Q: {question}")
+    print(f"  Expected: {ground_truth}")
+    print(f"  BASELINE Answer: {prediction}")
+    print(f"  Accuracy: {accuracy} (latency: {latency:.2f}s)\n")
+    
+    return {
+        "question_id": test_case['question_id'],
+        "question_type": test_case['question_type'],
+        "accuracy": accuracy,
+        "latency": latency,
+        "prediction": prediction,
+        "ground_truth": ground_truth
+    }
+    
+
+def main():
+    parser = argparse.ArgumentParser(description="Run LongMemEval Benchmark")
+    parser.add_argument("--dataset", type=str, default="data/longmemeval/longmemeval_s_cleaned.json", help="Path to json dataset")
+    parser.add_argument("--limit", type=int, default=5, help="Number of cases to evaluate (full set is 500)")
+    parser.add_argument("--baseline", action="store_true", help="Run with standard ConversationBufferMemory instead of NEXUS")
+    args = parser.parse_args()
+    
+    print(f"Loading dataset from {args.dataset}...")
+    try:
+        with open(args.dataset, 'r', encoding='utf-8') as f:
+            dataset = json.load(f)
+    except Exception as e:
+        print(f"Error loading {args.dataset}: {e}")
+        return
+        
+    cases = dataset[:args.limit]
+    print(f"Loaded {len(cases)} cases. Starting evaluation...")
+    
+    results = []
+    
+    # Create an outer temporary directory that automatically cleans up entirely
+    with tempfile.TemporaryDirectory() as temp_dir:
+        for idx, case in enumerate(cases):
+            print(f"=== Evaluating Case {idx+1}/{len(cases)} ===")
+            if args.baseline:
+                res = process_case_baseline(case)
+                results.append(res)
+            else:
+                res = process_case_nexus(case, temp_dir)
+                results.append(res)
+                
+    # Aggregate and print results
+    total_acc = sum(r['accuracy'] for r in results) / len(results)
+    avg_latency = sum(r['latency'] for r in results) / len(results)
+    
+    print("=" * 40)
+    print(f"LONGMEMEVAL EVALUATION COMPLETE")
+    print(f"Method: {'Baseline' if args.baseline else 'NEXUS Dual-Process'}")
+    print(f"Cases Evaluated: {len(results)}")
+    print(f"Overall Accuracy: {total_acc * 100:.1f}%")
+    print(f"Average Inquiry Latency: {avg_latency:.2f}s")
+    print("=" * 40)
+    
+    # Save results
+    output_file = "results/longmemeval_results.json"
+    os.makedirs("results", exist_ok=True)
+    with open(output_file, "w") as f:
+        json.dump({
+            "summary": {
+                "method": "Baseline" if args.baseline else "NEXUS",
+                "total_cases": len(results),
+                "accuracy": total_acc,
+                "latency": avg_latency
+            },
+            "cases": results
+        }, f, indent=2)
+        
+    print(f"Results saved to {output_file}")
+
+if __name__ == "__main__":
+    main()
