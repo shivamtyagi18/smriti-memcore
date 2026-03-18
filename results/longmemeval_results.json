@@ -1,0 +1,50 @@
+{
+  "summary": {
+    "method": "NEXUS",
+    "total_cases": 5,
+    "accuracy": 0.8,
+    "latency": 0.9806971549987793
+  },
+  "cases": [
+    {
+      "question_id": "e47becba",
+      "question_type": "single-session-user",
+      "accuracy": 1.0,
+      "latency": 1.0217769145965576,
+      "prediction": "You graduated with a degree in Business Administration.",
+      "ground_truth": "Business Administration"
+    },
+    {
+      "question_id": "118b2229",
+      "question_type": "single-session-user",
+      "accuracy": 1.0,
+      "latency": 0.9979660511016846,
+      "prediction": "Your daily commute to work takes 45 minutes each way.",
+      "ground_truth": "45 minutes each way"
+    },
+    {
+      "question_id": "51a45a95",
+      "question_type": "single-session-user",
+      "accuracy": 0.0,
+      "latency": 1.3549840450286865,
+      "prediction": "You redeemed a $5 coupon on coffee creamer at a store, but the specific store is not mentioned in the context.",
+      "ground_truth": "Target"
+    },
+    {
+      "question_id": "58bf7951",
+      "question_type": "single-session-user",
+      "accuracy": 1.0,
+      "latency": 0.8715379238128662,
+      "prediction": "You attended a production of The Glass Menagerie at the local community theater.",
+      "ground_truth": "The Glass Menagerie"
+    },
+    {
+      "question_id": "1e043500",
+      "question_type": "single-session-user",
+      "accuracy": 1.0,
+      "latency": 0.6572208404541016,
+      "prediction": "The name of the playlist you created on Spotify is \"Summer Vibes.\"",
+      "ground_truth": "Summer Vibes"
+    }
+  ]
+}

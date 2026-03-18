@@ -39,7 +39,8 @@ class NexusLangChainHistory(BaseChatMessageHistory):
     def messages(self) -> List[BaseMessage]:
         """
         Return the relevant history.
-        This queries the NEXUS semantic palace (System 1 + System 2) using recent local history as context.
+        This queries the NEXUS semantic palace (System 2) AND episodic buffer (System 1) 
+        using recent local history as context to achieve full Dual-Process memory.
         """
         if not self._local_history:
             return []
@@ -47,12 +48,21 @@ class NexusLangChainHistory(BaseChatMessageHistory):
         # Get the most recent user query to fetch context
         last_query = self._local_history[-1].content if self._local_history else "Hello"
         
-        # Fetch long-term memories using NEXUS
+        # System 2: Fetch abstract knowledge graph memories
         memories = self.nexus_client.recall(str(last_query), top_k=self.top_k)
         
-        # Format for the LLM prompt (Injecting Long-Term Memory as System Context)
+        # System 1: Fetch exact raw episodic event logs
+        episodes = self.nexus_client.episode_buffer.search_semantic(str(last_query), top_k=self.top_k)
+        
+        # Format for the LLM prompt (Injecting Dual-Process Memory as System Context)
+        context_blocks = []
         if memories:
-            context_str = "Relevant Long-Term Memories:\n" + "\n".join(f"- {m}" for m in memories)
+            context_blocks.append("Abstract Knowledge:\n" + "\n".join(f"- {m.content}" for m in memories))
+        if episodes:
+            context_blocks.append("Specific Past Events:\n" + "\n".join(f"- {ep.content}" for ep in episodes))
+            
+        if context_blocks:
+            context_str = "Relevant Long-Term Memories:\n\n" + "\n\n".join(context_blocks)
             # Prepend context to the local conversational window
             return [AIMessage(content=context_str)] + self._local_history
             

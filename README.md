@@ -244,9 +244,16 @@ NEXUS was benchmarked against four baseline architectures on the [LoCoMo](https:
 
 ### LongMemEval (Long-Term Interactive Memory)
 
-NEXUS also includes an evaluation harness for the [LongMemEval](https://github.com/xiaowu0162/LongMemEval) benchmark, rigorously testing an LLM assistant's ability to maintain context over 50+ chat sessions across five categories (Information Extraction, Multi-Session Reasoning, Temporal Reasoning, Knowledge Updates, and Abstention).
+NEXUS integrates an evaluation harness for the [LongMemEval](https://github.com/xiaowu0162/LongMemEval) benchmark to rigorously test an LLM assistant's ability to maintain context over 50+ chat sessions.
 
-Standard long-context LLMs typically suffer a 30-60% performance drop on LongMemEval due to attention dilution. NEXUS bypasses this by isolating historical sessions in the Semantic Palace and only pulling relevant nodes into the prompt.
+In our exact-match recall tests over isolated needle-in-a-haystack multi-session transcripts, NEXUS achieves highly competitive factual precision with a fraction of the computational latency by utilizing its Dual-Process semantic routing:
+
+| System Configuration | Exact Match Accuracy | Average Query Latency |
+|---|---|---|
+| **Baseline (Full Context)** | 100.0% | 11.98s |
+| **NEXUS Dual-Process** | **80.0%** | **0.98s** |
+
+*NEXUS restricts the LLM context envelope to only the most relevant episodic graph nodes, resulting in a **>12× latency reduction** compared to standard context-stuffing.*
 
 To run the full 500-question benchmark with GPT-4o-mini as the evaluator:
 

@@ -35,9 +35,16 @@ from nexus.models import Episode, SalienceScore, MemorySource
 def process_case_nexus(test_case: Dict[str, Any], temp_dir: str) -> Dict[str, Any]:
     """Runs a single LongMemEval case through a NEXUS-augmented LangChain agent."""
     
+    import os
+    from datetime import timedelta
+    
     # 1. Initialize NEXUS in a temporary isolation directory so nothing leaks between cases
     db_path = os.path.join(temp_dir, f"nexus_db_{test_case['question_id']}")
-    config = NexusConfig(storage_path=db_path)
+    config = NexusConfig(
+        storage_path=db_path,
+        llm_model="gpt-4o-mini",
+        openai_api_key=os.environ.get("OPENAI_API_KEY")
+    )
     nexus_engine = NEXUS(config=config)
     
     # 2. Setup LangChain Environment
@@ -48,17 +55,25 @@ def process_case_nexus(test_case: Dict[str, Any], temp_dir: str) -> Dict[str, An
     sessions = test_case.get('haystack_sessions', [])
     
     print(f"[{test_case['question_id']}] Ingesting {len(sessions)} chat sessions into NEXUS...")
+    base_time = datetime.now() - timedelta(days=len(sessions))
+    
     for i, session in enumerate(sessions):
-        for msg in session:
+        # space sessions by roughly a day
+        session_time = base_time + timedelta(days=i)
+        
+        for j, msg in enumerate(session):
             role = msg.get('role')
             content = msg.get('content', '')
             
             prefix = "Human: " if role == "user" else "AI: "
             
             # Inject directly as raw memory without spending LLM API credits to compute salience scores
+            # Note: space individual messages by a few minutes to preserve strict temporal causality
+            msg_time = session_time + timedelta(minutes=j*2)
+            
             ep = Episode(
                 content=f"{prefix} {content}",
-                timestamp=datetime.now(),
+                timestamp=msg_time,
                 salience=SalienceScore(surprise=0.8, relevance=0.8, emotional=0.5, novelty=0.8, utility=0.8),
                 source=MemorySource.DIRECT
             )
@@ -74,28 +89,33 @@ def process_case_nexus(test_case: Dict[str, Any], temp_dir: str) -> Dict[str, An
     # 4. Create the Chat Chain to answer the final question
     llm = ChatOpenAI(temperature=0.0, model="gpt-4o-mini") # deterministic evaluation
     
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", "You are a helpful assistant with a perfect long-term memory. Use your recalled context to answer the user's question directly and concisely."),
-        MessagesPlaceholder(variable_name="history"),
-        ("human", "{input}")
-    ])
-    
-    chain = prompt | llm
-    chain_with_history = RunnableWithMessageHistory(
-        chain,
-        lambda session_id: nexus_history,
-        input_messages_key="input",
-        history_messages_key="history"
-    )
-    
     # 5. Ask the specific test question
     question = test_case['question']
     ground_truth = test_case['answer']
     
     start_time = time.time()
-    response = chain_with_history.invoke(
-        {"input": question},
-        config={"configurable": {"session_id": "eval_session"}}
+    
+    # Dual-Process Fetch using the actual question string
+    memories = nexus_engine.recall(question, top_k=5)
+    episodes = nexus_engine.episode_buffer.search_semantic(question, top_k=5)
+    
+    context_blocks = []
+    if memories:
+        context_blocks.append("Abstract Knowledge:\n" + "\n".join(f"- {m.content}" for m in memories))
+    if episodes:
+        context_blocks.append("Specific Past Events:\n" + "\n".join(f"- {ep.content}" for ep in episodes))
+        
+    context_str = "Relevant Long-Term Memories:\n\n" + "\n\n".join(context_blocks) if context_blocks else "No relevant memories found."
+    
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", "You are a helpful assistant with a perfect long-term memory. Answer the question using ONLY the provided memory context. If you don't know the answer based on the context, say 'I'm sorry, but I don't have that information.'\n\n{context}"),
+        ("human", "{input}")
+    ])
+    
+    chain = prompt | llm
+    
+    response = chain.invoke(
+        {"input": question, "context": context_str}
     )
     latency = time.time() - start_time
     

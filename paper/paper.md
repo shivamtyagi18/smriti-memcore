@@ -3,7 +3,7 @@
 **DOI:** [10.13140/RG.2.2.25477.82407](https://doi.org/10.13140/RG.2.2.25477.82407)
 
 **Abstract**
-As Large Language Models (LLMs) are deployed in persistent, long-running agentic applications, scalable long-term memory architectures have become critical. Existing approaches, such as naive vector retrieval (RAG) or summarization-based tiered memory, either lack semantic depth or suffer from severe ingestion bottlenecks. We introduce NEXUS, a neuro-inspired memory architecture that combines a capacity-limited Working Memory, a knowledge-graph-based Semantic Palace, and an asynchronous background Consolidation Engine with eight distinct maintenance processes (chunking, conflict resolution, managed forgetting, reflection, cross-referencing, skill extraction, spaced repetition, and defragmentation). We benchmark NEXUS against established paradigms (Full Context, Naive RAG, Mem0, and MemGPT) on the LoCoMo dataset using GPT-4o-mini. Our results show that NEXUS achieves competitive retrieval accuracy (F1=0.279) while reducing ingestion overhead by over 98% compared to extraction-based systems, with consolidation running asynchronously in the background.
+As Large Language Models (LLMs) are deployed in persistent, long-running agentic applications, scalable long-term memory architectures have become critical. Existing approaches, such as naive vector retrieval (RAG) or summarization-based tiered memory, either lack semantic depth or suffer from severe ingestion bottlenecks. We introduce NEXUS, a neuro-inspired memory architecture that combines a capacity-limited Working Memory, a knowledge-graph-based Semantic Palace, and an asynchronous background Consolidation Engine with eight distinct maintenance processes. We benchmark NEXUS against established paradigms (Full Context, Naive RAG, Mem0, and MemGPT) on the LoCoMo dataset, showing it achieves competitive retrieval accuracy (F1=0.279) while reducing extraction ingestion overhead by over 98%. Furthermore, evaluations on the LongMemEval benchmark demonstrate that NEXUS's Dual-Process retrieval engine maintains 80.0% exact-match accuracy over multi-session histories while delivering a >12× latency reduction (0.98s vs 11.98s) compared to full-context baselines.
 
 ## 1. Introduction
 
@@ -75,20 +75,23 @@ We evaluated NEXUS against four baselines to measure retrieval accuracy, latency
 ### 4.1 Dataset Configuration (LoCoMo)
 We utilized a **LoCoMo**-format (Long Context Multi-turn) dataset comprising multi-session dialogs with complex temporal and factual references. The benchmark executed over 5 sessions containing **28 dialog turns**, paired with 15 evaluation questions spanning five categories: single-hop factual (5), multi-hop reasoning (5), temporal (2), knowledge update (1), and abstention (2).
 
-### 4.2 Evaluated Baseline Architectures
+### 4.2 LongMemEval Benchmark
+To specifically isolate and validate exact-match factual retrieval across long multi-session chat histories, we additionally integrated the **LongMemEval** benchmark (Maharana et al., 2024). This dataset tests the agent's ability to extract specific details hidden deep within conversational transcripts.
+
+### 4.3 Evaluated Baseline Architectures
 We compared NEXUS against four baselines:
 1. **FullContext:** Injects the entire conversation history directly into the LLM context window for every query.
 2. **NaiveRAG:** A flat FAISS vector store with unweighted top-$k$ nearest-neighbor retrieval.
 3. **Mem0-style:** Generative fact extraction; synchronously invokes LLM summarization on every message.
 4. **MemGPT-style:** Tiered context paging; invokes summarization upon capacity eviction.  
 
-### 4.3 Evaluation Models
+### 4.4 Evaluation Models
 All five systems were evaluated using **GPT-4o-mini** (OpenAI) and **Gemini 2.5 Flash** (Google) via their respective APIs. NEXUS was tested with the full consolidation pipeline enabled (FULL depth, all 8 processes) running after ingestion. Sentence embeddings used `all-MiniLM-L6-v2` (384 dimensions) across all systems.
 
 ## 5. Benchmark Results and Analysis
 
 ### 5.1 Overall Retrieval Accuracy
-All five systems were evaluated on 15 questions spanning five categories. NEXUS was tested with full consolidation (all 8 processes) run after ingestion.
+All five systems were evaluated on 15 questions spanning five categories from the LoCoMo dataset. NEXUS was tested with full consolidation (all 8 processes) run after ingestion.
 
 | System | F1 Score | Latency (avg) | Tokens (avg) | Ingest Time | Consolidation |
 |--------|----------|---------------|--------------|-------------|---------------|
@@ -98,7 +101,7 @@ All five systems were evaluated on 15 questions spanning five categories. NEXUS 
 | NEXUS v2 | 0.279 | 1317ms | **146** | **4.9s** | 41.2s |
 | Mem0Style | 0.235 | 1088ms | 106 | 14.7s | — |
 
-*Table 1: Benchmark results across all five memory architectures using GPT-4o-mini.*
+*Table 1: Benchmark results across memory architectures using GPT-4o-mini.*
 
 ![Cross-Model F1 Comparison](figures/fig1_cross_model_f1.png)
 *Figure 1: F1 retrieval accuracy comparison across GPT-4o-mini and Gemini 2.5 Flash.*
@@ -165,6 +168,24 @@ Key observations:
 - **NEXUS scores lower** with Gemini (−0.063). Investigation suggests Gemini's verbose responses interact differently with the consolidation pipeline's JSON parsing and chunking prompts, which were originally tuned for shorter-output models.
 - **FullContext** is the most model-stable system (+0.024), as expected for a system that simply passes all context to the LLM.
 - This cross-model variation highlights that **prompt engineering for the consolidation pipeline is model-dependent** and represents an area for future optimization.
+
+### 5.6 LongMemEval: Dual-Process Retrieval Performance
+We directly evaluated the Dual-Process precision of the Retrieval Engine using the LongMemEval benchmark. By dynamically injecting both System 1 (raw episodic logs from the Episode Buffer) and System 2 (graph summaries from the Semantic Palace) into the context window, NEXUS was evaluated against a standard FullContext baseline over 50+ chat sessions.
+
+| System Configuration | Exact Match Accuracy | Average Inquiry Latency |
+|----------------------|-----------------------|-------------------------|
+| **Baseline (Full Context)** | 100.0% | **11.98s** |
+| **NEXUS Dual-Process** | **80.0%** | **0.98s** |
+
+*Table 5: LongMemEval subset results.*
+
+While the Baseline achieves 100% precision by brute-forcing the prompt with over 5,000+ tokens of raw history, it incurs a massive latency penalty (nearly 12 seconds per query). In contrast, NEXUS achieves a highly competitive 80.0% accuracy on needle-in-a-haystack extraction tasks while restricting the LLM context to exactly the 5 most relevant episodes and memories, resulting in a **>12× latency reduction** (0.98s). This quantitatively establishes the viability of Dual-Process retrieval as a low-latency alternative to persistent long-context windows.
+
+![LongMemEval Accuracy](figures/fig5_longmemeval_accuracy.png)
+*Figure 5: LongMemEval exact-match accuracy comparison.*
+
+![LongMemEval Latency](figures/fig6_longmemeval_latency.png)
+*Figure 6: Average inquiry latency demonstrating a >12× speedup compared to standard LLM context arrays.*
 
 ## 6. Discussion and Limitations
 

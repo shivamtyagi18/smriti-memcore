@@ -165,14 +165,17 @@ class EpisodeBuffer:
 
     def search_semantic(self, query: str, top_k: int = 10) -> List[Episode]:
         """Search episodes by semantic similarity."""
-        results = self.vector_store.search(query=query, top_k=top_k)
+        results = self.vector_store.search(query=query, top_k=top_k * 10)
         episodes = []
         for vec_id, score in results:
             if vec_id.startswith("ep:"):
                 ep_id = vec_id[3:]
-                ep = self._episodes.get(ep_id)
+                # Fix: Must use self.get() rather than self._episodes.get() so it falls back to SQLite for consolidated episodes.
+                ep = self.get(ep_id)
                 if ep:
                     episodes.append(ep)
+                    if len(episodes) >= top_k:
+                        break
         return episodes
 
     def get_recent(self, n: int = 20) -> List[Episode]:
