@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEXUS - Semantic Palace</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar: Memory Manager -->
+        <aside class="glass-panel sidebar">
+            <div class="sidebar-header">
+                <h2>Semantic Palace</h2>
+                <button id="refresh-memories" class="icon-btn" title="Refresh">🔄</button>
+            </div>
+            <div class="memory-metrics">
+                <div class="metric"><span id="stat-episodes">0</span> Episodes</div>
+                <div class="metric"><span id="stat-rooms">0</span> Rooms</div>
+            </div>
+            <div class="memory-list" id="memory-list"></div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="glass-panel chat-container">
+            <header class="chat-header">
+                <div class="tab-nav">
+                    <button class="tab-btn active" data-tab="chat">💬 Chat</button>
+                    <button class="tab-btn" data-tab="data">🗄️ Data</button>
+                </div>
+                <div class="header-controls">
+                    <button id="toggle-logs" class="icon-btn" title="Toggle Live Logs">📋 Logs</button>
+                    <select id="model-select">
+                        <option value="mistral">Local Ollama (Mistral)</option>
+                        <option value="gpt-4o-mini">OpenAI (GPT-4o-mini)</option>
+                    </select>
+                </div>
+            </header>
+
+            <!-- ── Chat Tab ── -->
+            <div class="tab-pane active" id="tab-chat">
+                <div class="chat-history" id="chat-history">
+                    <div class="message ai">
+                        <div class="msg-bubble">NEXUS is online. The Dual-Process graph is primed. How can I assist you today?</div>
+                    </div>
+                </div>
+                <div class="chat-input-area">
+                    <textarea id="chat-input" placeholder="Initiate memory retrieval..." rows="1"></textarea>
+                    <button id="send-btn" class="primary-btn">Send</button>
+                </div>
+            </div>
+
+            <!-- ── Data Management Tab ── -->
+            <div class="tab-pane" id="tab-data">
+                <div class="data-toolbar">
+                    <button id="refresh-data" class="primary-btn sm">↻ Refresh</button>
+                    <div class="data-search">
+                        <input type="text" id="data-search" placeholder="🔍 Filter rows..." />
+                    </div>
+                </div>
+
+                <!-- Sub-section tabs -->
+                <div class="sub-tab-nav">
+                    <button class="sub-tab-btn active" data-sub="palace">🏛️ Palace Memories</button>
+                    <button class="sub-tab-btn" data-sub="episodes">📼 Episodes</button>
+                    <button class="sub-tab-btn" data-sub="chat-log">💬 Chat History</button>
+                </div>
+
+                <!-- Palace Memories Table -->
+                <div class="sub-pane active" id="sub-palace">
+                    <div class="data-table-wrap">
+                        <table class="data-table" id="palace-table">
+                            <thead>
+                                <tr>
+                                    <th>Content</th>
+                                    <th>Confidence</th>
+                                    <th>Status</th>
+                                    <th>Modality</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="palace-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Episodes Table -->
+                <div class="sub-pane" id="sub-episodes">
+                    <div class="data-table-wrap">
+                        <table class="data-table" id="episode-table">
+                            <thead>
+                                <tr>
+                                    <th>Content</th>
+                                    <th>Salience</th>
+                                    <th>Consolidated</th>
+                                    <th>ID</th>
+                                </tr>
+                            </thead>
+                            <tbody id="episodes-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Chat History Table -->
+                <div class="sub-pane" id="sub-chat-log">
+                    <div class="data-table-wrap">
+                        <table class="data-table" id="chatlog-table">
+                            <thead>
+                                <tr>
+                                    <th>Role</th>
+                                    <th>Content</th>
+                                    <th>Timestamp</th>
+                                </tr>
+                            </thead>
+                            <tbody id="chatlog-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Log Panel -->
+            <div class="log-panel" id="log-panel">
+                <div class="log-header">
+                    <span>⚡ Backend Logs (Live)</span>
+                    <button id="clear-logs" class="icon-btn" title="Clear">🗑️</button>
+                </div>
+                <pre class="log-output" id="log-output"></pre>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
