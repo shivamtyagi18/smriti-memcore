@@ -77,6 +77,37 @@ case "$MODEL_CHOICE" in
     *) LLM_MODEL="mistral";                   LLM_API_KEY="" ;;
 esac
 
+# ── Validate Ollama model is available (if using local Ollama) ─────────────
+if [[ -z "$LLM_API_KEY" ]]; then
+    if curl -s --connect-timeout 2 http://localhost:11434/api/tags >/dev/null 2>&1; then
+        AVAILABLE_MODELS=$(curl -s http://localhost:11434/api/tags | python3 -c "
+import json,sys
+data = json.load(sys.stdin)
+names = [m['name'].split(':')[0] for m in data.get('models', [])]
+print('\n'.join(names))
+" 2>/dev/null)
+        if [[ -n "$AVAILABLE_MODELS" ]]; then
+            if ! echo "$AVAILABLE_MODELS" | grep -qx "$LLM_MODEL"; then
+                warn "Ollama is running but model '$LLM_MODEL' is not pulled."
+                echo "  Available models: $(echo "$AVAILABLE_MODELS" | tr '\n' ' ')"
+                FIRST_MODEL=$(echo "$AVAILABLE_MODELS" | head -1)
+                read -rp "  Use '$FIRST_MODEL' instead? [Y/n]: " USE_FIRST
+                if [[ "${USE_FIRST:-Y}" =~ ^[Yy]$ ]]; then
+                    LLM_MODEL="$FIRST_MODEL"
+                    success "Using Ollama model: $LLM_MODEL"
+                else
+                    warn "Proceeding with '$LLM_MODEL' — run 'ollama pull $LLM_MODEL' before using NEXUS consolidation."
+                fi
+            else
+                success "Ollama model '$LLM_MODEL' is available."
+            fi
+        fi
+    else
+        warn "Ollama not running at localhost:11434. Consolidation LLM calls will fail until Ollama is started."
+        warn "Start Ollama and run 'ollama pull $LLM_MODEL', or re-run this script to choose a cloud model."
+    fi
+fi
+
 read -rp "Memory storage path [~/.nexus/global]: " STORAGE_PATH
 STORAGE_PATH="${STORAGE_PATH:-~/.nexus/global}"
 
