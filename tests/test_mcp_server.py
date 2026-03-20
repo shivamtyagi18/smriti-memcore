@@ -193,7 +193,7 @@ def test_recall_returns_list():
     assert isinstance(result, list)
 
 
-def test_recall_returns_serializable(tmp_nexus):
+def test_recall_returns_serializable():
     """nexus_recall output is fully JSON-serializable."""
     from nexus.integrations.mcp_server import nexus_encode, nexus_recall
     nexus_encode(content="LangChain integration uses BaseChatMessageHistory")
@@ -201,7 +201,7 @@ def test_recall_returns_serializable(tmp_nexus):
     assert _is_json_serializable(memories)
 
 
-def test_recall_memory_has_expected_keys(tmp_nexus):
+def test_recall_memory_has_expected_keys():
     """Each recalled memory dict has the required keys."""
     from nexus.integrations.mcp_server import nexus_encode, nexus_recall
     nexus_encode(content="NEXUS uses a semantic palace for memory storage")
@@ -251,7 +251,7 @@ def test_knowledge_gaps_returns_list():
     assert isinstance(result, list)
 
 
-def test_knowledge_gaps_shape_when_populated(tmp_nexus):
+def test_knowledge_gaps_shape_when_populated():
     """Each gap dict has the required keys."""
     from nexus.integrations.mcp_server import nexus_recall, nexus_knowledge_gaps
     nexus_recall(query="extremely obscure topic that does not exist in memory xyz123")
@@ -264,7 +264,7 @@ def test_knowledge_gaps_shape_when_populated(tmp_nexus):
 
 # ── Task 6: Memory management tools ──────────────────────────────────────────
 
-def test_pin_success(tmp_nexus):
+def test_pin_success():
     """nexus_pin returns {status: pinned, memory_id} after pinning."""
     from nexus.integrations.mcp_server import nexus_encode, nexus_pin
     enc = nexus_encode(content="Important fact that must never be forgotten")
@@ -285,7 +285,7 @@ def test_pin_not_found():
     assert "error" in result
 
 
-def test_forget_sets_archived(tmp_nexus):
+def test_forget_sets_archived():
     """nexus_forget returns {status: archived} and memory is ARCHIVED."""
     from nexus.integrations.mcp_server import nexus_encode, nexus_forget
     enc = nexus_encode(content="Temporary note to be forgotten after use")

@@ -127,11 +127,15 @@ def nexus_encode(
     except ValueError:
         return {"error": f"Invalid modality '{modality}'. Use: text, code, image, structured"}
 
-    memory_id = _nexus.encode(content, source=mem_source, modality=mem_modality)
-    if memory_id is None:
-        return {"memory_id": None, "status": "discarded"}
-    _nexus.save()
-    return {"memory_id": memory_id}
+    try:
+        memory_id = _nexus.encode(content, source=mem_source, modality=mem_modality)
+        if memory_id is None:
+            return {"memory_id": None, "status": "discarded"}
+        _nexus.save()
+        return {"memory_id": memory_id}
+    except Exception as e:
+        logger.error(f"nexus_encode failed: {e}")
+        return {"error": str(e)}
 
 
 @mcp_server.tool()
