@@ -125,6 +125,19 @@ def test_build_nexus_config_openai_routing(tmp_path, monkeypatch):
     assert config.anthropic_api_key == ""   # "" not None
 
 
+def test_llm_model_ollama_routing(tmp_path, monkeypatch):
+    """Non-prefixed model name (ollama path) produces '' for all provider key fields."""
+    monkeypatch.setenv("NEXUS_STORAGE_PATH", str(tmp_path))
+    monkeypatch.setenv("NEXUS_LLM_MODEL", "mistral")
+    monkeypatch.delenv("NEXUS_LLM_API_KEY", raising=False)
+
+    from nexus.integrations.mcp_server import build_nexus_config
+    config = build_nexus_config()
+    assert config.anthropic_api_key == ""
+    assert config.openai_api_key == ""
+    assert config.gemini_api_key == ""
+
+
 def test_build_nexus_config_expands_tilde(monkeypatch):
     """~ in NEXUS_STORAGE_PATH must be expanded."""
     monkeypatch.setenv("NEXUS_STORAGE_PATH", "~/.nexus/test")

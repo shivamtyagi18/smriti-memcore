@@ -53,7 +53,7 @@ def build_nexus_config() -> NexusConfig:
         os.environ.get("NEXUS_STORAGE_PATH", "~/.nexus/global")
     )
     llm_model = os.environ.get("NEXUS_LLM_MODEL", "mistral")
-    api_key = os.environ.get("NEXUS_LLM_API_KEY", "") or None
+    api_key = os.environ.get("NEXUS_LLM_API_KEY", "")
 
     # Infer provider from model name prefix — matches LLMInterface routing in llm_interface.py:61-68
     # IMPORTANT: Pass "" (empty string, not None) for unused provider keys.
