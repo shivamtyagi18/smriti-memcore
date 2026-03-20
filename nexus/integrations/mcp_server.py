@@ -164,3 +164,45 @@ def nexus_get_context() -> Dict[str, str]:
         return {"error": str(e)}
 
 
+# ── Confidence & Gap Tools ────────────────────────────────────────────────────
+
+@mcp_server.tool()
+def nexus_how_well_do_i_know(topic: str) -> Dict[str, Any]:
+    """
+    Assess confidence about a topic.
+
+    Returns 5 confidence dimensions (coverage, freshness, strength, depth, overall)
+    and a decision: "recall_confidently", "recall_but_verify", or "admit_gap_and_ask".
+
+    Uses two internal calls: confidence_map() for dimensions, should_recall_or_ask()
+    for the decision — these are separate MetaMemory methods.
+    """
+    try:
+        conf = _nexus.meta_memory.confidence_map(topic)
+        decision = _nexus.meta_memory.should_recall_or_ask(topic)
+        return {
+            "coverage": conf.coverage,
+            "freshness": conf.freshness,
+            "strength": conf.strength,
+            "depth": conf.depth,
+            "overall": conf.overall,
+            "decision": decision.value,
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp_server.tool()
+def nexus_knowledge_gaps() -> List[Dict[str, Any]]:
+    """
+    List topics NEXUS knows it doesn't know.
+
+    Returns gap dicts with keys: topic, context, discovered_at (ISO string), resolved (bool).
+    Gaps are registered when recall returns empty or confidence is below threshold.
+    """
+    try:
+        return _nexus.knowledge_gaps()
+    except Exception as e:
+        return [{"error": str(e)}]
+
+

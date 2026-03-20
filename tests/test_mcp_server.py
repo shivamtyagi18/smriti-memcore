@@ -219,3 +219,46 @@ def test_get_context_returns_string():
     assert "context" in result
     assert isinstance(result["context"], str)
 
+# ── Task 5: Confidence tools ──────────────────────────────────────────────────
+
+def test_how_well_do_i_know_all_fields():
+    """Returns all 6 required fields including decision."""
+    from nexus.integrations.mcp_server import nexus_how_well_do_i_know
+    result = nexus_how_well_do_i_know(topic="Python")
+    for key in ("coverage", "freshness", "strength", "depth", "overall", "decision"):
+        assert key in result, f"Missing key: {key}"
+
+
+def test_how_well_do_i_know_decision_valid_values():
+    """decision field must be one of the three DecisionType values."""
+    from nexus.integrations.mcp_server import nexus_how_well_do_i_know
+    result = nexus_how_well_do_i_know(topic="unknown topic xyz")
+    assert result["decision"] in ("recall_confidently", "recall_but_verify", "admit_gap_and_ask")
+
+
+def test_how_well_do_i_know_numeric_fields():
+    """Numeric confidence fields must be floats."""
+    from nexus.integrations.mcp_server import nexus_how_well_do_i_know
+    result = nexus_how_well_do_i_know(topic="anything")
+    for key in ("coverage", "freshness", "strength", "overall"):
+        assert isinstance(result[key], float), f"{key} must be float"
+
+
+def test_knowledge_gaps_returns_list():
+    """nexus_knowledge_gaps returns a list."""
+    from nexus.integrations.mcp_server import nexus_knowledge_gaps
+    result = nexus_knowledge_gaps()
+    assert isinstance(result, list)
+
+
+def test_knowledge_gaps_shape_when_populated(tmp_nexus):
+    """Each gap dict has the required keys."""
+    from nexus.integrations.mcp_server import nexus_recall, nexus_knowledge_gaps
+    nexus_recall(query="extremely obscure topic that does not exist in memory xyz123")
+    gaps = nexus_knowledge_gaps()
+    if gaps:
+        gap = gaps[0]
+        for key in ("topic", "context", "discovered_at", "resolved"):
+            assert key in gap, f"Missing key: {key}"
+
+
