@@ -77,3 +77,61 @@ def test_serialize_memory_expected_keys():
     result = serialize_memory(mem)
     for key in ("id", "content", "strength", "room_id", "reflection_level", "source", "last_accessed"):
         assert key in result, f"Missing key: {key}"
+
+
+def test_build_nexus_config_defaults(tmp_path, monkeypatch):
+    """Default env vars produce a valid NexusConfig with expanded path."""
+    monkeypatch.setenv("NEXUS_STORAGE_PATH", str(tmp_path))
+    monkeypatch.delenv("NEXUS_LLM_MODEL", raising=False)
+    monkeypatch.delenv("NEXUS_LLM_API_KEY", raising=False)
+    # Clear ambient cloud keys to prevent NexusConfig.__post_init__ env var fallback
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+
+    from nexus.integrations.mcp_server import build_nexus_config
+    config = build_nexus_config()
+    assert config.storage_path == str(tmp_path)
+    assert config.llm_model == "mistral"
+    # Unused providers get "" not None — prevents env var inheritance
+    assert config.anthropic_api_key == ""
+    assert config.openai_api_key == ""
+
+
+def test_build_nexus_config_anthropic_routing(tmp_path, monkeypatch):
+    """NEXUS_LLM_MODEL=claude-* sets anthropic_api_key; others get ''."""
+    monkeypatch.setenv("NEXUS_STORAGE_PATH", str(tmp_path))
+    monkeypatch.setenv("NEXUS_LLM_MODEL", "claude-sonnet-4-6")
+    monkeypatch.setenv("NEXUS_LLM_API_KEY", "sk-ant-test")
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+
+    from nexus.integrations.mcp_server import build_nexus_config
+    config = build_nexus_config()
+    assert config.llm_model == "claude-sonnet-4-6"
+    assert config.anthropic_api_key == "sk-ant-test"
+    assert config.openai_api_key == ""   # "" not None — no env var inheritance
+
+
+def test_build_nexus_config_openai_routing(tmp_path, monkeypatch):
+    """NEXUS_LLM_MODEL=gpt-* sets openai_api_key; others get ''."""
+    monkeypatch.setenv("NEXUS_STORAGE_PATH", str(tmp_path))
+    monkeypatch.setenv("NEXUS_LLM_MODEL", "gpt-4o")
+    monkeypatch.setenv("NEXUS_LLM_API_KEY", "sk-openai-test")
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+
+    from nexus.integrations.mcp_server import build_nexus_config
+    config = build_nexus_config()
+    assert config.openai_api_key == "sk-openai-test"
+    assert config.anthropic_api_key == ""   # "" not None
+
+
+def test_build_nexus_config_expands_tilde(monkeypatch):
+    """~ in NEXUS_STORAGE_PATH must be expanded."""
+    monkeypatch.setenv("NEXUS_STORAGE_PATH", "~/.nexus/test")
+    monkeypatch.delenv("NEXUS_LLM_MODEL", raising=False)
+    monkeypatch.delenv("NEXUS_LLM_API_KEY", raising=False)
+
+    from nexus.integrations.mcp_server import build_nexus_config
+    config = build_nexus_config()
+    assert not config.storage_path.startswith("~")
+    assert config.storage_path == os.path.expanduser("~/.nexus/test")
