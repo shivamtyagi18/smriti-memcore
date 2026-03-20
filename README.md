@@ -179,14 +179,32 @@ See [`examples/langchain_agent.py`](examples/langchain_agent.py) or [`examples/q
 
 Give Claude Code persistent long-term memory across every session using the built-in MCP server.
 
-**One-command setup:**
+**Prerequisites:**
+
+- Python 3.9+
+- [Claude Code](https://claude.ai/code) installed
+- An LLM for consolidation (pick one):
+  - **Local (free):** [Ollama](https://ollama.ai) + `ollama pull mistral`
+  - **Cloud:** Anthropic, OpenAI, or Google API key
+
+**Setup (2 steps):**
+
+**Step 1 — Run the install script:**
 
 ```bash
-pip3 install "nexus-memory[mcp]"
 bash <(curl -s https://raw.githubusercontent.com/shivamtyagi18/nexus-memory/main/install_nexus_mcp.sh)
 ```
 
-The script detects your Python, prompts for an LLM model and API key, and patches `~/.claude.json` automatically. Restart Claude Code — NEXUS appears under `/mcp` and is ready to use.
+The script will:
+- Create a dedicated venv at `~/.nexus/venv`
+- Install `nexus-memory` into it
+- Prompt for your LLM choice and API key
+- Prompt for memory storage path (default: `~/.nexus/global`)
+- Register the MCP server in `~/.claude.json`
+
+**Step 2 — Restart Claude Code**
+
+**Verify:** Run `/mcp` inside Claude Code — `nexus` should appear as connected.
 
 **Available tools (10):**
 
