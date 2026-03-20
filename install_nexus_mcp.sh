@@ -178,6 +178,22 @@ existing_cmds = [h["hooks"][0]["command"] for h in settings["hooks"]["UserPrompt
 if not any("nexus_recall" in cmd for cmd in existing_cmds):
     settings["hooks"]["UserPromptSubmit"].append(nexus_prompt_hook)
 
+# SessionStart — load working memory for the current project directory
+nexus_session_hook = {
+    "hooks": [{
+        "type": "command",
+        "command": r"""bash -c 'echo "{\"systemMessage\": \"NEXUS MEMORY: Session starting in $(pwd). Call nexus_get_context to load working memory for this project, then nexus_recall with the project name and relevant keywords.\"}"'""",
+        "statusMessage": "Loading NEXUS context..."
+    }]
+}
+
+if "SessionStart" not in settings["hooks"]:
+    settings["hooks"]["SessionStart"] = []
+
+existing_session_cmds = [h["hooks"][0]["command"] for h in settings["hooks"]["SessionStart"] if h.get("hooks")]
+if not any("nexus_get_context" in cmd for cmd in existing_session_cmds):
+    settings["hooks"]["SessionStart"].append(nexus_session_hook)
+
 # Stop — remind Claude to encode takeaways
 nexus_stop_hook = {
     "hooks": [{
