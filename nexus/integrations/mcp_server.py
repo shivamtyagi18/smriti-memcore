@@ -206,3 +206,67 @@ def nexus_knowledge_gaps() -> List[Dict[str, Any]]:
         return [{"error": str(e)}]
 
 
+# ── Memory Management Tools ───────────────────────────────────────────────────
+
+@mcp_server.tool()
+def nexus_pin(memory_id: str) -> Dict[str, Any]:
+    """
+    Mark a memory as permanent — it will never be decayed or forgotten.
+
+    Returns {"status": "pinned", "memory_id": ...} on success,
+    or {"error": ...} if the memory_id is not found.
+    """
+    try:
+        mem = _nexus.palace.get_memory(memory_id)
+        if mem is None:
+            return {"error": f"Memory not found: {memory_id}"}
+        _nexus.pin(memory_id)
+        return {"status": "pinned", "memory_id": memory_id}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp_server.tool()
+def nexus_forget(memory_id: str) -> Dict[str, Any]:
+    """
+    Gracefully forget a memory by archiving it.
+
+    Sets memory status to ARCHIVED (not deleted — a record remains).
+    Returns {"status": "archived", "memory_id": ...} on success,
+    or {"error": ...} if the memory_id is not found.
+    """
+    try:
+        mem = _nexus.palace.get_memory(memory_id)
+        if mem is None:
+            return {"error": f"Memory not found: {memory_id}"}
+        _nexus.forget(memory_id)
+        return {"status": "archived", "memory_id": memory_id}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp_server.tool()
+def nexus_consolidate(depth: str = "light") -> Dict[str, Any]:
+    """
+    Run a consolidation cycle to organize and strengthen memories.
+
+    depth="light": chunking + conflict detection only (fast, safe to call often)
+    depth="full": all 8 consolidation processes (thorough, use periodically)
+
+    Note: "defer" is intentionally excluded — it means "let the scheduler decide"
+    and is not useful as an explicit call.
+    """
+    if depth not in ("light", "full"):
+        return {"error": "depth must be 'light' or 'full'"}
+    try:
+        result = _nexus.consolidate(depth=depth)
+        return {
+            "depth": depth,
+            "processed": result.get("total_processed", result.get("processed", 0)),
+            "summary": str(result.get("summary", result.get("depth", depth))),
+            "elapsed_seconds": result.get("elapsed_seconds", 0),
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+

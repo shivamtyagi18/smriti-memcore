@@ -262,3 +262,60 @@ def test_knowledge_gaps_shape_when_populated(tmp_nexus):
             assert key in gap, f"Missing key: {key}"
 
 
+# ── Task 6: Memory management tools ──────────────────────────────────────────
+
+def test_pin_success(tmp_nexus):
+    """nexus_pin returns {status: pinned, memory_id} after pinning."""
+    from nexus.integrations.mcp_server import nexus_encode, nexus_pin
+    enc = nexus_encode(content="Important fact that must never be forgotten")
+    if enc.get("memory_id") is None:
+        pytest.skip("attention gate discarded test content")
+    memory_id = enc["memory_id"]
+    result = nexus_pin(memory_id=memory_id)
+    assert result == {"status": "pinned", "memory_id": memory_id}
+
+
+def test_pin_not_found():
+    """nexus_pin returns error dict for unknown memory_id."""
+    from nexus.integrations.mcp_server import nexus_pin
+    result = nexus_pin(memory_id="nonexistent-id-xyz")
+    assert "error" in result
+
+
+def test_forget_sets_archived(tmp_nexus):
+    """nexus_forget returns {status: archived} and memory is ARCHIVED."""
+    from nexus.integrations.mcp_server import nexus_encode, nexus_forget
+    enc = nexus_encode(content="Temporary note to be forgotten after use")
+    if enc.get("memory_id") is None:
+        pytest.skip("attention gate discarded test content")
+    memory_id = enc["memory_id"]
+    result = nexus_forget(memory_id=memory_id)
+    assert result == {"status": "archived", "memory_id": memory_id}
+    mem = _mcp_module._nexus.palace.get_memory(memory_id)
+    assert mem.status == MemoryStatus.ARCHIVED
+
+
+def test_forget_not_found():
+    """nexus_forget returns error dict for unknown memory_id."""
+    from nexus.integrations.mcp_server import nexus_forget
+    result = nexus_forget(memory_id="nonexistent-id-xyz")
+    assert "error" in result
+
+
+def test_consolidate_light():
+    """nexus_consolidate('light') returns a summary dict."""
+    from nexus.integrations.mcp_server import nexus_consolidate
+    result = nexus_consolidate(depth="light")
+    assert "depth" in result
+    assert result["depth"] == "light"
+
+
+def test_consolidate_invalid_depth():
+    """nexus_consolidate with invalid depth returns error."""
+    from nexus.integrations.mcp_server import nexus_consolidate
+    result = nexus_consolidate(depth="defer")
+    assert "error" in result
+    result2 = nexus_consolidate(depth="invalid")
+    assert "error" in result2
+
+
