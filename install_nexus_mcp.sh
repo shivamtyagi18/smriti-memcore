@@ -135,6 +135,15 @@ fi
 
 # ── 6. Patch ~/.claude/settings.json with hooks ───────────────────────────────
 
+echo ""
+echo "NEXUS can configure automatic memory hooks in ~/.claude/settings.json"
+echo "so Claude recalls memories on every message and encodes takeaways at session end."
+echo "This modifies your global Claude Code settings (affects all projects)."
+echo ""
+read -rp "Configure automatic memory hooks? [y/N]: " CONFIGURE_HOOKS
+CONFIGURE_HOOKS="${CONFIGURE_HOOKS:-N}"
+
+if [[ "$CONFIGURE_HOOKS" =~ ^[Yy]$ ]]; then
 info "Configuring Claude Code hooks in ~/.claude/settings.json..."
 
 "$PYTHON" - <<PYEOF
@@ -213,6 +222,10 @@ if ! grep -q "NEXUS Memory" "$CLAUDE_MD" 2>/dev/null; then
     success "NEXUS instructions added to $CLAUDE_MD"
 else
     info "NEXUS instructions already present in $CLAUDE_MD — skipping"
+fi
+
+else
+    info "Skipping hooks setup — you can add them manually via /hooks in Claude Code"
 fi
 
 # ── Done ──────────────────────────────────────────────────────────────────────
