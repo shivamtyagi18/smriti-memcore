@@ -165,8 +165,8 @@ if "hooks" not in settings:
 nexus_prompt_hook = {
     "hooks": [{
         "type": "command",
-        "command": "echo '{\"hookSpecificOutput\": {\"hookEventName\": \"UserPromptSubmit\", \"additionalContext\": \"NEXUS MEMORY: Call nexus_recall with keywords from the user message to retrieve relevant memories before responding.\"}}'",
-        "statusMessage": "Recalling NEXUS memories..."
+        "command": "echo '{\"hookSpecificOutput\": {\"hookEventName\": \"UserPromptSubmit\", \"additionalContext\": \"NEXUS MEMORY PROTOCOL: (1) BEFORE responding: call nexus_recall with 2-3 keywords from the user message. (2) AFTER responding: call nexus_encode for any of these that occurred this turn: user stated a preference or fact, a decision was made, a problem was solved, a key design choice was finalized, or new project context was revealed. Do not skip nexus_encode when these conditions are met.\"}}'",
+        "statusMessage": "Loading NEXUS memories..."
     }]
 }
 
@@ -224,10 +224,20 @@ CLAUDE_MD="$HOME/.claude/CLAUDE.md"
 NEXUS_SECTION="
 ## NEXUS Memory
 
-Use the nexus MCP tools to maintain memory across sessions:
-- At the start of each session, call \`nexus_recall\` with relevant keywords to retrieve prior context
-- Throughout the session, call \`nexus_encode\` when you learn important facts about the user, their preferences, decisions made, or project context
-- At the end of each session, call \`nexus_encode\` to store any key takeaways"
+Use the nexus MCP tools to maintain memory across sessions.
+
+**On every user message:** Call \`nexus_recall\` with 2-3 keywords before responding.
+
+**Call \`nexus_encode\` immediately when any of these occur:**
+- User states a preference, constraint, or personal fact (\"I prefer...\", \"we always...\", \"don't do X\")
+- A technical decision is finalized (architecture choice, library selection, approach chosen)
+- A bug root cause is identified or a problem is solved
+- New project context is revealed (goals, deadlines, team setup, infra details)
+- A workflow or process is established (\"from now on...\", \"the way we do this is...\")
+
+**Do not wait until end of session** — encode facts as they emerge, mid-conversation.
+
+**At session end:** Call \`nexus_encode\` with a summary of key takeaways not yet encoded."
 
 if [[ ! -f "$CLAUDE_MD" ]]; then
     echo "# Global Claude Instructions" > "$CLAUDE_MD"
