@@ -166,6 +166,7 @@ def nexus_get_context() -> Dict[str, str]:
     try:
         return {"context": _nexus.get_context()}
     except Exception as e:
+        logger.error(f"nexus_get_context failed: {e}")
         return {"error": str(e)}
 
 
