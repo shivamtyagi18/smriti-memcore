@@ -15,6 +15,7 @@ from __future__ import annotations
 import atexit
 import logging
 import os
+import sys
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
@@ -323,6 +324,6 @@ def _startup():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO, stream=__import__("sys").stderr)
+    logging.basicConfig(level=logging.INFO, stream=sys.stderr)
     _startup()
     mcp_server.run(transport="stdio")
