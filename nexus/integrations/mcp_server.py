@@ -100,3 +100,67 @@ def serialize_memory(memory: Memory) -> Dict[str, Any]:
         "hops": memory.hops,
         "retrieval_score": memory.retrieval_score,
     }
+# ── Core Memory Tools ─────────────────────────────────────────────────────────
+
+@mcp_server.tool()
+def nexus_encode(
+    content: str,
+    source: str = "direct",
+    modality: str = "text",
+) -> Dict[str, Any]:
+    """
+    Encode information into NEXUS long-term memory.
+
+    Returns the memory_id if stored, or {"memory_id": null, "status": "discarded"}
+    if the Attention Gate determined the content has insufficient salience.
+
+    source: "direct" (default), "user_stated" (highest trust, confidence=1.0),
+            "inferred", or "external"
+    modality: "text" (default), "code", "image", "structured"
+    """
+    try:
+        mem_source = MemorySource(source)
+    except ValueError:
+        return {"error": f"Invalid source '{source}'. Use: direct, user_stated, inferred, external"}
+    try:
+        mem_modality = Modality(modality)
+    except ValueError:
+        return {"error": f"Invalid modality '{modality}'. Use: text, code, image, structured"}
+
+    memory_id = _nexus.encode(content, source=mem_source, modality=mem_modality)
+    if memory_id is None:
+        return {"memory_id": None, "status": "discarded"}
+    _nexus.save()
+    return {"memory_id": memory_id}
+
+
+@mcp_server.tool()
+def nexus_recall(query: str, top_k: int = 10) -> List[Dict[str, Any]]:
+    """
+    Recall memories relevant to a query.
+
+    Returns a list of memory dicts, strongest first. Every retrieval strengthens
+    the recalled memories (testing effect). Returns empty list if nothing found.
+    """
+    try:
+        memories = _nexus.recall(query, top_k=top_k)
+        return [serialize_memory(m) for m in memories]
+    except Exception as e:
+        logger.error(f"nexus_recall failed: {e}")
+        return [{"error": str(e)}]
+
+
+@mcp_server.tool()
+def nexus_get_context() -> Dict[str, str]:
+    """
+    Get formatted working memory context for injection into a prompt.
+
+    Returns the current capacity-bounded working memory (7±2 slots) as a
+    formatted string ready to prepend to a system prompt or user message.
+    """
+    try:
+        return {"context": _nexus.get_context()}
+    except Exception as e:
+        return {"error": str(e)}
+
+

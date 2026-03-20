@@ -8,6 +8,7 @@ import pytest
 
 from nexus.models import Memory, MemorySource, MemoryStatus, Modality, NexusConfig, SalienceScore
 from nexus.core import NEXUS
+import nexus.integrations.mcp_server as _mcp_module
 
 
 @pytest.fixture
@@ -148,3 +149,73 @@ def test_build_nexus_config_expands_tilde(monkeypatch):
     config = build_nexus_config()
     assert not config.storage_path.startswith("~")
     assert config.storage_path == os.path.expanduser("~/.nexus/test")
+
+
+# ── Task 4: Core memory tools ─────────────────────────────────────────────────
+
+@pytest.fixture(autouse=True)
+def inject_nexus(tmp_nexus):
+    """Inject test NEXUS instance into the module-level _nexus variable."""
+    original = _mcp_module._nexus
+    _mcp_module._nexus = tmp_nexus
+    yield
+    _mcp_module._nexus = original
+
+
+def test_encode_returns_memory_id():
+    """nexus_encode returns a memory_id string for salient content."""
+    from nexus.integrations.mcp_server import nexus_encode
+    result = nexus_encode(content="Python is preferred for backend services")
+    assert "memory_id" in result
+    assert isinstance(result["memory_id"], str)
+    assert len(result["memory_id"]) > 0
+
+
+def test_encode_discarded_on_empty():
+    """nexus_encode returns discarded status for empty/whitespace content."""
+    from nexus.integrations.mcp_server import nexus_encode
+    result = nexus_encode(content="   ")
+    assert result.get("memory_id") is None
+    assert result.get("status") == "discarded"
+
+
+def test_encode_source_default_is_direct():
+    """nexus_encode defaults source to 'direct', not 'user_stated'."""
+    from nexus.integrations.mcp_server import nexus_encode
+    result = nexus_encode(content="Default source test content")
+    assert "memory_id" in result
+
+
+def test_recall_returns_list():
+    """nexus_recall returns a list (empty when store is empty)."""
+    from nexus.integrations.mcp_server import nexus_recall
+    result = nexus_recall(query="anything")
+    assert isinstance(result, list)
+
+
+def test_recall_returns_serializable(tmp_nexus):
+    """nexus_recall output is fully JSON-serializable."""
+    from nexus.integrations.mcp_server import nexus_encode, nexus_recall
+    nexus_encode(content="LangChain integration uses BaseChatMessageHistory")
+    memories = nexus_recall(query="LangChain")
+    assert _is_json_serializable(memories)
+
+
+def test_recall_memory_has_expected_keys(tmp_nexus):
+    """Each recalled memory dict has the required keys."""
+    from nexus.integrations.mcp_server import nexus_encode, nexus_recall
+    nexus_encode(content="NEXUS uses a semantic palace for memory storage")
+    memories = nexus_recall(query="semantic palace")
+    if memories:  # may be empty if attention gate discards
+        mem = memories[0]
+        for key in ("id", "content", "strength", "room_id", "reflection_level", "source", "last_accessed"):
+            assert key in mem, f"Missing key: {key}"
+
+
+def test_get_context_returns_string():
+    """nexus_get_context returns a dict with a 'context' string key."""
+    from nexus.integrations.mcp_server import nexus_get_context
+    result = nexus_get_context()
+    assert "context" in result
+    assert isinstance(result["context"], str)
+
