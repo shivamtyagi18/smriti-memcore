@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.9] - 2026-03-19
+
+### Added
+- **MCP Server** (`nexus/integrations/mcp_server.py`): Exposes NEXUS as a Claude Code MCP server via stdio transport
+  - 10 tools: `nexus_encode`, `nexus_recall`, `nexus_get_context`, `nexus_how_well_do_i_know`, `nexus_knowledge_gaps`, `nexus_pin`, `nexus_forget`, `nexus_consolidate`, `nexus_stats`, `nexus_get_suggestions`
+  - LLM provider auto-detected from model name prefix (`claude-*` → Anthropic, `gpt-*` → OpenAI, `gemini*` → Gemini, else Ollama)
+  - Configured via environment variables: `NEXUS_STORAGE_PATH`, `NEXUS_LLM_MODEL`, `NEXUS_LLM_API_KEY`
+- **Install script** (`install_nexus_mcp.sh`): One-command setup that installs the package, detects the correct Python, prompts for LLM config, and patches `~/.claude.json`
+- **31 MCP server tests** covering all tools, routing logic, error handling, and edge cases
+- `pip install nexus-memory[mcp]` installs MCP server dependencies
+
 ## [0.1.1] - 2025-03-03
 
 ### Added

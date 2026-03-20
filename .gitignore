@@ -57,3 +57,6 @@ _agent/
 langchain_nexus_db/
 
 .venv_langchain/
+
+# MCP server config (machine-specific paths — create from .mcp.json.example)
+.mcp.json

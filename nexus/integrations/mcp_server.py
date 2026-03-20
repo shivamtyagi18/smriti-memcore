@@ -1,0 +1,330 @@
+"""
+NEXUS MCP Server.
+Exposes the NEXUS memory system as a Claude Code MCP server via stdio transport.
+
+Usage:
+    python -m nexus.integrations.mcp_server
+
+Environment variables:
+    NEXUS_STORAGE_PATH   Where to persist data (default: ~/.nexus/global)
+    NEXUS_LLM_MODEL      LLM model name — provider inferred from prefix (default: mistral)
+    NEXUS_LLM_API_KEY    API key for cloud providers; empty for Ollama
+"""
+from __future__ import annotations
+
+import atexit
+import logging
+import os
+import sys
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+try:
+    import mcp
+    from mcp.server.fastmcp import FastMCP
+except ImportError:
+    raise ImportError(
+        "To use the NEXUS MCP server, install the mcp extra:\n"
+        "pip install nexus-memory[mcp]"
+    )
+
+from nexus.core import NEXUS
+from nexus.models import (
+    ConsolidationDepth,
+    Memory,
+    MemorySource,
+    MemoryStatus,
+    Modality,
+    NexusConfig,
+)
+
+logger = logging.getLogger(__name__)
+
+# ── Startup Config ────────────────────────────────────────────────────────────
+
+def build_nexus_config() -> NexusConfig:
+    """
+    Build NexusConfig from environment variables.
+
+    NEXUS_STORAGE_PATH  — storage dir, ~ expanded (default: ~/.nexus/global)
+    NEXUS_LLM_MODEL     — model name, provider inferred by prefix (default: mistral)
+    NEXUS_LLM_API_KEY   — API key for cloud providers (default: "")
+    """
+    storage_path = os.path.expanduser(
+        os.environ.get("NEXUS_STORAGE_PATH", "~/.nexus/global")
+    )
+    llm_model = os.environ.get("NEXUS_LLM_MODEL", "mistral")
+    api_key = os.environ.get("NEXUS_LLM_API_KEY", "")
+
+    # Infer provider from model name prefix — matches LLMInterface routing in llm_interface.py:61-68
+    # IMPORTANT: Pass "" (empty string, not None) for unused provider keys.
+    # NexusConfig.__post_init__ falls back to reading ANTHROPIC_API_KEY/OPENAI_API_KEY/GEMINI_API_KEY
+    # env vars only when the field is None. Passing "" prevents that silent inheritance.
+    anthropic_key = api_key if llm_model.startswith("claude") else ""
+    openai_key = api_key if llm_model.startswith("gpt-") else ""
+    gemini_key = api_key if llm_model.startswith("gemini") else ""
+
+    return NexusConfig(
+        storage_path=storage_path,
+        llm_model=llm_model,
+        anthropic_api_key=anthropic_key,
+        openai_api_key=openai_key,
+        gemini_api_key=gemini_key,
+    )
+
+
+# Module-level NEXUS instance — initialized at startup, shared across tool calls.
+# Tests replace this: `import nexus.integrations.mcp_server as s; s._nexus = test_instance`
+_nexus: Optional[NEXUS] = None
+
+mcp_server = FastMCP("nexus-memory")
+
+
+# ── Serialization ─────────────────────────────────────────────────────────────
+
+def serialize_memory(memory: Memory) -> Dict[str, Any]:
+    """Convert a Memory dataclass to a JSON-serializable dict."""
+    return {
+        "id": memory.id,
+        "content": memory.content,
+        "strength": memory.strength,
+        "confidence": memory.confidence,
+        "room_id": memory.room_id,
+        "reflection_level": memory.reflection_level,
+        "source": memory.source.value,
+        "modality": memory.modality.value,
+        "status": memory.status.value,
+        "creation_time": memory.creation_time.isoformat(),
+        "last_accessed": memory.last_accessed.isoformat(),
+        "access_count": memory.access_count,
+        "salience": memory.salience.to_dict(),
+        "hops": memory.hops,
+        "retrieval_score": memory.retrieval_score,
+    }
+# ── Core Memory Tools ─────────────────────────────────────────────────────────
+
+@mcp_server.tool()
+def nexus_encode(
+    content: str,
+    source: str = "direct",
+    modality: str = "text",
+) -> Dict[str, Any]:
+    """
+    Encode information into NEXUS long-term memory.
+
+    Returns the memory_id if stored, or {"memory_id": null, "status": "discarded"}
+    if the Attention Gate determined the content has insufficient salience.
+
+    source: "direct" (default), "user_stated" (highest trust, confidence=1.0),
+            "inferred", or "external"
+    modality: "text" (default), "code", "image", "structured"
+    """
+    try:
+        mem_source = MemorySource(source)
+    except ValueError:
+        return {"error": f"Invalid source '{source}'. Use: direct, user_stated, inferred, external"}
+    try:
+        mem_modality = Modality(modality)
+    except ValueError:
+        return {"error": f"Invalid modality '{modality}'. Use: text, code, image, structured"}
+
+    try:
+        memory_id = _nexus.encode(content, source=mem_source, modality=mem_modality)
+        if memory_id is None:
+            return {"memory_id": None, "status": "discarded"}
+        _nexus.save()
+        return {"memory_id": memory_id}
+    except Exception as e:
+        logger.error(f"nexus_encode failed: {e}")
+        return {"error": str(e)}
+
+
+@mcp_server.tool()
+def nexus_recall(query: str, top_k: int = 10) -> List[Dict[str, Any]]:
+    """
+    Recall memories relevant to a query.
+
+    Returns a list of memory dicts, strongest first. Every retrieval strengthens
+    the recalled memories (testing effect). Returns empty list if nothing found.
+    """
+    try:
+        memories = _nexus.recall(query, top_k=top_k)
+        return [serialize_memory(m) for m in memories]
+    except Exception as e:
+        logger.error(f"nexus_recall failed: {e}")
+        return [{"error": str(e)}]
+
+
+@mcp_server.tool()
+def nexus_get_context() -> Dict[str, str]:
+    """
+    Get formatted working memory context for injection into a prompt.
+
+    Returns the current capacity-bounded working memory (7±2 slots) as a
+    formatted string ready to prepend to a system prompt or user message.
+    """
+    try:
+        return {"context": _nexus.get_context()}
+    except Exception as e:
+        logger.error(f"nexus_get_context failed: {e}")
+        return {"error": str(e)}
+
+
+# ── Confidence & Gap Tools ────────────────────────────────────────────────────
+
+@mcp_server.tool()
+def nexus_how_well_do_i_know(topic: str) -> Dict[str, Any]:
+    """
+    Assess confidence about a topic.
+
+    Returns 5 confidence dimensions (coverage, freshness, strength, depth, overall)
+    and a decision: "recall_confidently", "recall_but_verify", or "admit_gap_and_ask".
+
+    Uses two internal calls: confidence_map() for dimensions, should_recall_or_ask()
+    for the decision — these are separate MetaMemory methods.
+    """
+    try:
+        conf = _nexus.meta_memory.confidence_map(topic)
+        decision = _nexus.meta_memory.should_recall_or_ask(topic)
+        return {
+            "coverage": conf.coverage,
+            "freshness": conf.freshness,
+            "strength": conf.strength,
+            "depth": conf.depth,
+            "overall": conf.overall,
+            "decision": decision.value,
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp_server.tool()
+def nexus_knowledge_gaps() -> List[Dict[str, Any]]:
+    """
+    List topics NEXUS knows it doesn't know.
+
+    Returns gap dicts with keys: topic, context, discovered_at (ISO string), resolved (bool).
+    Gaps are registered when recall returns empty or confidence is below threshold.
+    """
+    try:
+        return _nexus.knowledge_gaps()
+    except Exception as e:
+        return [{"error": str(e)}]
+
+
+# ── Memory Management Tools ───────────────────────────────────────────────────
+
+@mcp_server.tool()
+def nexus_pin(memory_id: str) -> Dict[str, Any]:
+    """
+    Mark a memory as permanent — it will never be decayed or forgotten.
+
+    Returns {"status": "pinned", "memory_id": ...} on success,
+    or {"error": ...} if the memory_id is not found.
+    """
+    try:
+        mem = _nexus.palace.get_memory(memory_id)
+        if mem is None:
+            return {"error": f"Memory not found: {memory_id}"}
+        _nexus.pin(memory_id)
+        # Verify the pin actually took effect
+        mem = _nexus.palace.get_memory(memory_id)
+        if mem is None or mem.status != MemoryStatus.PINNED:
+            return {"error": f"Failed to pin memory: {memory_id}"}
+        return {"status": "pinned", "memory_id": memory_id}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp_server.tool()
+def nexus_forget(memory_id: str) -> Dict[str, Any]:
+    """
+    Gracefully forget a memory by archiving it.
+
+    Sets memory status to ARCHIVED (not deleted — a record remains).
+    Returns {"status": "archived", "memory_id": ...} on success,
+    or {"error": ...} if the memory_id is not found.
+    """
+    try:
+        mem = _nexus.palace.get_memory(memory_id)
+        if mem is None:
+            return {"error": f"Memory not found: {memory_id}"}
+        _nexus.forget(memory_id)
+        return {"status": "archived", "memory_id": memory_id}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp_server.tool()
+def nexus_consolidate(depth: str = "light") -> Dict[str, Any]:
+    """
+    Run a consolidation cycle to organize and strengthen memories.
+
+    depth="light": chunking + conflict detection only (fast, safe to call often)
+    depth="full": all 8 consolidation processes (thorough, use periodically)
+
+    Note: "defer" is intentionally excluded — it means "let the scheduler decide"
+    and is not useful as an explicit call.
+    """
+    if depth not in ("light", "full"):
+        return {"error": "depth must be 'light' or 'full'"}
+    try:
+        result = _nexus.consolidate(depth=depth)
+        return {
+            "depth": depth,
+            "processed": result.get("total_processed", result.get("processed", 0)),
+            "summary": str(result.get("summary", result.get("depth", depth))),
+            "elapsed_seconds": result.get("elapsed_seconds", 0),
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+
+# ── Introspection Tools ───────────────────────────────────────────────────────
+
+@mcp_server.tool()
+def nexus_stats() -> Dict[str, Any]:
+    """
+    Get comprehensive NEXUS system statistics.
+
+    Returns a nested dict with 8 top-level keys:
+    palace, working_memory, retrieval, consolidation, meta_memory,
+    episode_buffer, vector_store, metrics.
+    """
+    try:
+        return _nexus.stats()
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp_server.tool()
+def nexus_get_suggestions() -> List[Dict[str, Any]]:
+    """
+    Get proactive suggestions from NEXUS's ambient monitor.
+
+    Returns a list of memory dicts — patterns and insights surfaced from
+    background consolidation that may be relevant to the current context.
+    """
+    try:
+        suggestions = _nexus.get_suggestions()
+        return [serialize_memory(s) for s in suggestions]
+    except Exception as e:
+        return [{"error": str(e)}]
+
+
+# ── Startup ───────────────────────────────────────────────────────────────────
+
+def _startup():
+    """Initialize the module-level NEXUS instance from env vars."""
+    global _nexus
+    config = build_nexus_config()
+    logger.info(f"Starting NEXUS MCP server (storage: {config.storage_path}, model: {config.llm_model})")
+    _nexus = NEXUS(config=config)
+    atexit.register(_nexus.save)
+    logger.info("NEXUS MCP server ready — 10 tools registered")
+
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, stream=sys.stderr)
+    _startup()
+    mcp_server.run(transport="stdio")
