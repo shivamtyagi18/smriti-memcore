@@ -5,13 +5,15 @@
 #   bash install_nexus_mcp.sh
 #
 # What it does:
-#   1. Installs nexus-memory[mcp] with pip
-#   2. Locates the Python executable that owns the install
+#   1. Creates a dedicated venv at ~/.nexus/venv
+#   2. Installs nexus-memory[mcp] into it
 #   3. Patches ~/.claude.json to register the nexus MCP server
 #
-# Requirements: Python 3.9+, pip, Claude Code (creates ~/.claude.json if missing)
+# Requirements: Python 3.9+, Claude Code
 
 set -euo pipefail
+
+VENV_DIR="$HOME/.nexus/venv"
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -19,36 +21,37 @@ info()    { echo "[nexus] $*"; }
 success() { echo "[nexus] ✓ $*"; }
 error()   { echo "[nexus] ✗ $*" >&2; exit 1; }
 
-# ── 1. Install package ────────────────────────────────────────────────────────
+# ── 1. Create dedicated venv ──────────────────────────────────────────────────
 
-info "Installing nexus-memory[mcp]..."
-pip install "nexus-memory[mcp]" --quiet || error "pip install failed. Is pip available?"
-success "nexus-memory[mcp] installed"
+PY=$(command -v python3 || command -v python || true)
+[[ -z "$PY" ]] && error "Python 3.9+ not found. Install it first."
 
-# ── 2. Locate the Python that owns the install ────────────────────────────────
+PY_VERSION=$("$PY" -c "import sys; print(sys.version_info.minor)")
+[[ "$PY_VERSION" -lt 9 ]] && error "Python 3.9+ required (found 3.$PY_VERSION)."
 
-PYTHON=$(python3 -c "import sys; print(sys.executable)")
-
-# Verify nexus actually imports from this Python
-if ! "$PYTHON" -c "import nexus" 2>/dev/null; then
-    # pip may have installed into a different Python — search common locations
-    for candidate in \
-        "$(pip show nexus-memory 2>/dev/null | awk '/^Location:/{print $2}')/../../../bin/python3" \
-        "$HOME/.local/bin/python3" \
-        "/usr/local/bin/python3" \
-        "/usr/bin/python3"; do
-        candidate=$(realpath "$candidate" 2>/dev/null || true)
-        if [[ -x "$candidate" ]] && "$candidate" -c "import nexus" 2>/dev/null; then
-            PYTHON="$candidate"
-            break
-        fi
-    done
+if [[ ! -x "$VENV_DIR/bin/python3" ]]; then
+    info "Creating venv at $VENV_DIR..."
+    "$PY" -m venv "$VENV_DIR"
+    success "Venv created"
+else
+    info "Using existing venv at $VENV_DIR"
 fi
 
+PYTHON="$VENV_DIR/bin/python3"
+
+# ── 2. Install package into venv ──────────────────────────────────────────────
+
+info "Installing nexus-memory[mcp]..."
+"$PYTHON" -m pip install "nexus-memory[mcp]" --quiet --upgrade
+# Ensure mcp is installed even if the PyPI release pre-dates the extra
+"$PYTHON" -c "import mcp" 2>/dev/null || "$PYTHON" -m pip install "mcp>=1.0.0" --quiet
+success "nexus-memory[mcp] installed"
+
+# Verify imports
 "$PYTHON" -c "import nexus" 2>/dev/null \
-    || error "nexus package not importable from $PYTHON. Try: pip3 install 'nexus-memory[mcp]' and re-run."
+    || error "nexus not importable after install — check pip output above."
 "$PYTHON" -c "import mcp" 2>/dev/null \
-    || error "mcp package not importable from $PYTHON. Try: pip3 install 'nexus-memory[mcp]' and re-run."
+    || error "mcp not importable after install — check pip output above."
 
 success "Using Python: $PYTHON"
 
@@ -65,11 +68,11 @@ read -rp "Choice [1]: " MODEL_CHOICE
 MODEL_CHOICE="${MODEL_CHOICE:-1}"
 
 case "$MODEL_CHOICE" in
-    1) LLM_MODEL="mistral";                  LLM_API_KEY="" ;;
+    1) LLM_MODEL="mistral";                   LLM_API_KEY="" ;;
     2) LLM_MODEL="claude-haiku-4-5-20251001"; read -rsp "Anthropic API key: " LLM_API_KEY; echo ;;
-    3) LLM_MODEL="gpt-4o-mini";              read -rsp "OpenAI API key: " LLM_API_KEY; echo ;;
-    4) read -rp "Model name: " LLM_MODEL;    read -rsp "API key (leave blank for Ollama): " LLM_API_KEY; echo ;;
-    *) LLM_MODEL="mistral";                  LLM_API_KEY="" ;;
+    3) LLM_MODEL="gpt-4o-mini";               read -rsp "OpenAI API key: " LLM_API_KEY; echo ;;
+    4) read -rp "Model name: " LLM_MODEL;     read -rsp "API key (leave blank for Ollama): " LLM_API_KEY; echo ;;
+    *) LLM_MODEL="mistral";                   LLM_API_KEY="" ;;
 esac
 
 read -rp "Memory storage path [~/.nexus/global]: " STORAGE_PATH
@@ -77,27 +80,22 @@ STORAGE_PATH="${STORAGE_PATH:-~/.nexus/global}"
 
 # ── 4. Patch ~/.claude.json ───────────────────────────────────────────────────
 
-CLAUDE_JSON="$HOME/.claude.json"
-
-info "Registering nexus MCP server in $CLAUDE_JSON..."
+info "Registering nexus MCP server in ~/.claude.json..."
 
 "$PYTHON" - <<PYEOF
-import json, os, sys
+import json, os
 
 claude_json = os.path.expanduser("~/.claude.json")
 
-# Load existing config or start fresh
 if os.path.exists(claude_json):
     with open(claude_json) as f:
         config = json.load(f)
 else:
     config = {}
 
-# Ensure mcpServers key exists
 if "mcpServers" not in config:
     config["mcpServers"] = {}
 
-# Write nexus entry
 config["mcpServers"]["nexus"] = {
     "command": "$PYTHON",
     "args": ["-m", "nexus.integrations.mcp_server"],
@@ -118,20 +116,19 @@ PYEOF
 # ── 5. Smoke test ─────────────────────────────────────────────────────────────
 
 info "Verifying server starts..."
-if NEXUS_STORAGE_PATH=/tmp/nexus_install_test NEXUS_LLM_MODEL="$LLM_MODEL" \
-    "$PYTHON" -c "
-import sys, os
+if "$PYTHON" -c "
+import os
 os.environ['NEXUS_STORAGE_PATH'] = '/tmp/nexus_install_test'
 os.environ['NEXUS_LLM_MODEL'] = '$LLM_MODEL'
 os.environ['NEXUS_LLM_API_KEY'] = '$LLM_API_KEY'
-from nexus.integrations.mcp_server import build_nexus_config, mcp_server
+from nexus.integrations.mcp_server import build_nexus_config
 cfg = build_nexus_config()
 assert cfg.llm_model == '$LLM_MODEL'
 print('ok')
 " 2>/dev/null | grep -q ok; then
     success "Server verified"
 else
-    echo "[nexus] ⚠ Could not verify server start — check your LLM config after launch"
+    echo "[nexus] ⚠ Could not verify server — check your LLM config after launch"
 fi
 
 # ── Done ──────────────────────────────────────────────────────────────────────
