@@ -1,0 +1,12 @@
+{
+  "nexus": {
+    "type": "stdio",
+    "command": "/Users/shivamtyagi/PycharmProjects/nexus-memory/.venv/bin/python3",
+    "args": ["-m", "nexus.integrations.mcp_server"],
+    "env": {
+      "NEXUS_STORAGE_PATH": "~/.nexus/global",
+      "NEXUS_LLM_MODEL": "mistral",
+      "NEXUS_LLM_API_KEY": ""
+    }
+  }
+}
