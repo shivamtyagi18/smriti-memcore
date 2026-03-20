@@ -308,3 +308,21 @@ def nexus_get_suggestions() -> List[Dict[str, Any]]:
         return [serialize_memory(s) for s in suggestions]
     except Exception as e:
         return [{"error": str(e)}]
+
+
+# ── Startup ───────────────────────────────────────────────────────────────────
+
+def _startup():
+    """Initialize the module-level NEXUS instance from env vars."""
+    global _nexus
+    config = build_nexus_config()
+    logger.info(f"Starting NEXUS MCP server (storage: {config.storage_path}, model: {config.llm_model})")
+    _nexus = NEXUS(config=config)
+    atexit.register(_nexus.save)
+    logger.info("NEXUS MCP server ready — 10 tools registered")
+
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, stream=__import__("sys").stderr)
+    _startup()
+    mcp_server.run(transport="stdio")
