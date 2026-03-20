@@ -1,13 +1,14 @@
 {
-  "nexus": {
-    "type": "stdio",
-    "command": "python3",
-    "args": ["-m", "nexus.integrations.mcp_server"],
-    "env": {
-      "PYTHONPATH": "/path/to/nexus-memory",
-      "NEXUS_STORAGE_PATH": "~/.nexus/global",
-      "NEXUS_LLM_MODEL": "mistral",
-      "NEXUS_LLM_API_KEY": ""
+  "mcpServers": {
+    "nexus": {
+      "command": "python3",
+      "args": ["-m", "nexus.integrations.mcp_server"],
+      "env": {
+        "PYTHONPATH": "/path/to/nexus-memory",
+        "NEXUS_STORAGE_PATH": "~/.nexus/global",
+        "NEXUS_LLM_MODEL": "mistral",
+        "NEXUS_LLM_API_KEY": ""
+      }
     }
   }
 }
