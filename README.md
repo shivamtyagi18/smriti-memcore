@@ -175,6 +175,43 @@ conversation.predict(input="I prefer using PyTorch.")
 
 See [`examples/langchain_agent.py`](examples/langchain_agent.py) or [`examples/quickstart.py`](examples/quickstart.py) for complete working code.
 
+#### Claude Code (MCP Server)
+
+Give Claude Code persistent long-term memory across every session using the built-in MCP server.
+
+**One-command setup:**
+
+```bash
+pip3 install "nexus-memory[mcp]"
+bash <(curl -s https://raw.githubusercontent.com/shivamtyagi18/nexus-memory/main/install_nexus_mcp.sh)
+```
+
+The script detects your Python, prompts for an LLM model and API key, and patches `~/.claude.json` automatically. Restart Claude Code — NEXUS appears under `/mcp` and is ready to use.
+
+**Available tools (10):**
+
+| Tool | Description |
+|---|---|
+| `nexus_encode` | Store information in long-term memory |
+| `nexus_recall` | Retrieve memories by natural-language query |
+| `nexus_get_context` | Inject working memory into the current prompt |
+| `nexus_how_well_do_i_know` | Confidence check on a topic |
+| `nexus_knowledge_gaps` | List topics NEXUS knows it doesn't know |
+| `nexus_pin` | Mark a memory as permanent (never decayed) |
+| `nexus_forget` | Archive a memory |
+| `nexus_consolidate` | Run a consolidation cycle |
+| `nexus_stats` | System-wide statistics |
+| `nexus_get_suggestions` | Proactive insights from background consolidation |
+
+**LLM options** — set during install or via environment variables:
+
+| Model | Provider | Requires |
+|---|---|---|
+| `mistral` (default) | Local Ollama | `ollama pull mistral` |
+| `claude-*` | Anthropic | `NEXUS_LLM_API_KEY` |
+| `gpt-*` | OpenAI | `NEXUS_LLM_API_KEY` |
+| `gemini*` | Google | `NEXUS_LLM_API_KEY` |
+
 ---
 
 ## Key API
@@ -306,8 +343,10 @@ nexus-memory/
 │   ├── llm_interface.py   # Multi-provider LLM connector (Ollama/OpenAI/Anthropic/Gemini)
 │   ├── metrics.py         # Observability: counters, gauges, histograms, Prometheus export
 │   └── integrations/      # Framework adapters
-│       └── langchain_memory.py  # LangChain BaseMemory component
-├── tests/                 # 159 tests across 13 files
+│       ├── langchain_memory.py  # LangChain BaseMemory component
+│       └── mcp_server.py        # Claude Code MCP server (10 tools)
+├── install_nexus_mcp.sh   # One-command Claude Code setup
+├── tests/                 # 190 tests across 14 files
 ├── baselines/             # Baseline implementations for comparison
 ├── benchmarks/            # Benchmark harness & scripts
 ├── examples/              # Usage examples
