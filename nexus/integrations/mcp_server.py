@@ -270,3 +270,33 @@ def nexus_consolidate(depth: str = "light") -> Dict[str, Any]:
         return {"error": str(e)}
 
 
+# ── Introspection Tools ───────────────────────────────────────────────────────
+
+@mcp_server.tool()
+def nexus_stats() -> Dict[str, Any]:
+    """
+    Get comprehensive NEXUS system statistics.
+
+    Returns a nested dict with 8 top-level keys:
+    palace, working_memory, retrieval, consolidation, meta_memory,
+    episode_buffer, vector_store, metrics.
+    """
+    try:
+        return _nexus.stats()
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp_server.tool()
+def nexus_get_suggestions() -> List[Dict[str, Any]]:
+    """
+    Get proactive suggestions from NEXUS's ambient monitor.
+
+    Returns a list of memory dicts — patterns and insights surfaced from
+    background consolidation that may be relevant to the current context.
+    """
+    try:
+        suggestions = _nexus.get_suggestions()
+        return [serialize_memory(s) for s in suggestions]
+    except Exception as e:
+        return [{"error": str(e)}]

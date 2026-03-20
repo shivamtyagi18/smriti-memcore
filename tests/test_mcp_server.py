@@ -319,3 +319,33 @@ def test_consolidate_invalid_depth():
     assert "error" in result2
 
 
+# ── Task 7: Introspection tools ───────────────────────────────────────────────
+
+def test_stats_top_level_keys():
+    """nexus_stats returns all 8 expected top-level keys."""
+    from nexus.integrations.mcp_server import nexus_stats
+    result = nexus_stats()
+    for key in ("palace", "working_memory", "retrieval", "consolidation",
+                "meta_memory", "episode_buffer", "vector_store", "metrics"):
+        assert key in result, f"Missing top-level key: {key}"
+
+
+def test_stats_is_json_serializable():
+    """nexus_stats output must be JSON-serializable."""
+    from nexus.integrations.mcp_server import nexus_stats
+    result = nexus_stats()
+    assert _is_json_serializable(result)
+
+
+def test_get_suggestions_returns_list():
+    """nexus_get_suggestions returns a list."""
+    from nexus.integrations.mcp_server import nexus_get_suggestions
+    result = nexus_get_suggestions()
+    assert isinstance(result, list)
+
+
+def test_get_suggestions_serializable():
+    """nexus_get_suggestions output is JSON-serializable."""
+    from nexus.integrations.mcp_server import nexus_get_suggestions
+    result = nexus_get_suggestions()
+    assert _is_json_serializable(result)
