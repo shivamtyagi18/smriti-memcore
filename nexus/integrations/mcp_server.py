@@ -221,6 +221,10 @@ def nexus_pin(memory_id: str) -> Dict[str, Any]:
         if mem is None:
             return {"error": f"Memory not found: {memory_id}"}
         _nexus.pin(memory_id)
+        # Verify the pin actually took effect
+        mem = _nexus.palace.get_memory(memory_id)
+        if mem is None or mem.status != MemoryStatus.PINNED:
+            return {"error": f"Failed to pin memory: {memory_id}"}
         return {"status": "pinned", "memory_id": memory_id}
     except Exception as e:
         return {"error": str(e)}

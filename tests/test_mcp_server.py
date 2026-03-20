@@ -273,6 +273,9 @@ def test_pin_success(tmp_nexus):
     memory_id = enc["memory_id"]
     result = nexus_pin(memory_id=memory_id)
     assert result == {"status": "pinned", "memory_id": memory_id}
+    # Verify the memory is actually PINNED in the palace
+    mem = _mcp_module._nexus.palace.get_memory(memory_id)
+    assert mem.status == MemoryStatus.PINNED
 
 
 def test_pin_not_found():
