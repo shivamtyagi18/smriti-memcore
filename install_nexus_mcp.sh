@@ -193,47 +193,65 @@ if "hooks" not in settings:
     settings["hooks"] = {}
 
 # UserPromptSubmit — inject nexus_recall reminder into Claude's context
-nexus_prompt_hook = {
-    "type": "command",
-    "command": "echo '{\"hookSpecificOutput\": {\"hookEventName\": \"UserPromptSubmit\", \"additionalContext\": \"NEXUS MEMORY PROTOCOL: (1) BEFORE responding: call nexus_recall with 2-3 keywords from the user message. (2) AFTER responding: call nexus_encode for any of these that occurred this turn: user stated a preference or fact, a decision was made, a problem was solved, a key design choice was finalized, or new project context was revealed. Do not skip nexus_encode when these conditions are met.\"}}'",
-    "statusMessage": "Loading NEXUS memories..."
+nexus_prompt_group = {
+    "matcher": "",
+    "hooks": [{
+        "type": "command",
+        "command": "echo '{\"hookSpecificOutput\": {\"hookEventName\": \"UserPromptSubmit\", \"additionalContext\": \"NEXUS MEMORY PROTOCOL: (1) BEFORE responding: call nexus_recall with 2-3 keywords from the user message. (2) AFTER responding: call nexus_encode for any of these that occurred this turn: user stated a preference or fact, a decision was made, a problem was solved, a key design choice was finalized, or new project context was revealed. Do not skip nexus_encode when these conditions are met.\"}}'",
+        "statusMessage": "Loading NEXUS memories..."
+    }]
 }
 
 if "UserPromptSubmit" not in settings["hooks"]:
     settings["hooks"]["UserPromptSubmit"] = []
 
 # Only add if not already present
-existing_cmds = [h.get("command", "") for h in settings["hooks"]["UserPromptSubmit"]]
+existing_cmds = []
+for group in settings["hooks"]["UserPromptSubmit"]:
+    for h in group.get("hooks", []):
+        existing_cmds.append(h.get("command", ""))
 if not any("nexus_recall" in cmd for cmd in existing_cmds):
-    settings["hooks"]["UserPromptSubmit"].append(nexus_prompt_hook)
+    settings["hooks"]["UserPromptSubmit"].append(nexus_prompt_group)
 
 # SessionStart — load working memory for the current project directory
-nexus_session_hook = {
-    "type": "command",
-    "command": r"""bash -c 'echo "{\"systemMessage\": \"NEXUS MEMORY: Session starting in $(pwd). Call nexus_get_context to load working memory for this project, then nexus_recall with the project name and relevant keywords.\"}"'""",
-    "statusMessage": "Loading NEXUS context..."
+nexus_session_group = {
+    "matcher": "",
+    "hooks": [{
+        "type": "command",
+        "command": r"""bash -c 'echo "{\"systemMessage\": \"NEXUS MEMORY: Session starting in $(pwd). Call nexus_get_context to load working memory for this project, then nexus_recall with the project name and relevant keywords.\"}"'""",
+        "statusMessage": "Loading NEXUS context..."
+    }]
 }
 
 if "SessionStart" not in settings["hooks"]:
     settings["hooks"]["SessionStart"] = []
 
-existing_session_cmds = [h.get("command", "") for h in settings["hooks"]["SessionStart"]]
+existing_session_cmds = []
+for group in settings["hooks"]["SessionStart"]:
+    for h in group.get("hooks", []):
+        existing_session_cmds.append(h.get("command", ""))
 if not any("nexus_get_context" in cmd for cmd in existing_session_cmds):
-    settings["hooks"]["SessionStart"].append(nexus_session_hook)
+    settings["hooks"]["SessionStart"].append(nexus_session_group)
 
 # Stop — remind Claude to encode takeaways
-nexus_stop_hook = {
-    "type": "command",
-    "command": "echo '{\"systemMessage\": \"NEXUS: Remember to call nexus_encode to store key facts, decisions, and context from this session before ending.\"}'",
-    "statusMessage": "Saving NEXUS memory..."
+nexus_stop_group = {
+    "matcher": "",
+    "hooks": [{
+        "type": "command",
+        "command": "echo '{\"systemMessage\": \"NEXUS: Remember to call nexus_encode to store key facts, decisions, and context from this session before ending.\"}'",
+        "statusMessage": "Saving NEXUS memory..."
+    }]
 }
 
 if "Stop" not in settings["hooks"]:
     settings["hooks"]["Stop"] = []
 
-existing_stop_cmds = [h.get("command", "") for h in settings["hooks"]["Stop"]]
+existing_stop_cmds = []
+for group in settings["hooks"]["Stop"]:
+    for h in group.get("hooks", []):
+        existing_stop_cmds.append(h.get("command", ""))
 if not any("nexus_encode" in cmd for cmd in existing_stop_cmds):
-    settings["hooks"]["Stop"].append(nexus_stop_hook)
+    settings["hooks"]["Stop"].append(nexus_stop_group)
 
 with open(settings_path, "w") as f:
     json.dump(settings, f, indent=2)
