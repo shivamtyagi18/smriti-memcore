@@ -46,7 +46,52 @@ NEXUS combines a capacity-bounded Working Memory, a graph-based Semantic Palace,
 - **System 2 (Slow & Analytical):** Background consolidation. Uses LLM reasoning to chunk, organize, and abstract semantic knowledge asynchronously while the agent is idle.
 ---
 
-## Installation
+## Quick Start — Claude Code (MCP)
+
+The fastest way to use NEXUS is as a persistent memory layer for [Claude Code](https://claude.ai/code). One command, and your AI remembers you across every session.
+
+**Run the install script:**
+
+```bash
+bash <(curl -s https://raw.githubusercontent.com/shivamtyagi18/nexus-memory/main/install_nexus_mcp.sh)
+```
+
+The script will:
+- Create a dedicated venv at `~/.nexus/venv`
+- Install `nexus-memory` into it
+- Prompt for your LLM choice and API key
+- Register the MCP server in `~/.claude.json`
+- Optionally configure automatic memory hooks
+
+**Then restart Claude Code.** Verify with `/mcp` — `nexus` should appear as connected.
+
+**Available tools (10):**
+
+| Tool | Description |
+|---|---|
+| `nexus_encode` | Store information in long-term memory |
+| `nexus_recall` | Retrieve memories by natural-language query |
+| `nexus_get_context` | Inject working memory into the current prompt |
+| `nexus_how_well_do_i_know` | Confidence check on a topic |
+| `nexus_knowledge_gaps` | List topics NEXUS knows it doesn't know |
+| `nexus_pin` | Mark a memory as permanent (never decayed) |
+| `nexus_forget` | Archive a memory |
+| `nexus_consolidate` | Run a consolidation cycle |
+| `nexus_stats` | System-wide statistics |
+| `nexus_get_suggestions` | Proactive insights from background consolidation |
+
+**LLM options** — set during install or via environment variables:
+
+| Model | Provider | Requires |
+|---|---|---|
+| `mistral` (default) | Local Ollama | `ollama pull mistral` |
+| `claude-*` | Anthropic | `NEXUS_LLM_API_KEY` |
+| `gpt-*` | OpenAI | `NEXUS_LLM_API_KEY` |
+| `gemini*` | Google | `NEXUS_LLM_API_KEY` |
+
+---
+
+## Installation (Python Library)
 
 ```bash
 pip install nexus-memory
@@ -177,58 +222,7 @@ See [`examples/langchain_agent.py`](examples/langchain_agent.py) or [`examples/q
 
 #### Claude Code (MCP Server)
 
-Give Claude Code persistent long-term memory across every session using the built-in MCP server.
-
-**Prerequisites:**
-
-- Python 3.9+
-- [Claude Code](https://claude.ai/code) installed
-- An LLM for consolidation (pick one):
-  - **Local (free):** [Ollama](https://ollama.ai) + `ollama pull mistral`
-  - **Cloud:** Anthropic, OpenAI, or Google API key
-
-**Setup (2 steps):**
-
-**Step 1 — Run the install script:**
-
-```bash
-bash <(curl -s https://raw.githubusercontent.com/shivamtyagi18/nexus-memory/main/install_nexus_mcp.sh)
-```
-
-The script will:
-- Create a dedicated venv at `~/.nexus/venv`
-- Install `nexus-memory` into it
-- Prompt for your LLM choice and API key
-- Prompt for memory storage path (default: `~/.nexus/global`)
-- Register the MCP server in `~/.claude.json`
-
-**Step 2 — Restart Claude Code**
-
-**Verify:** Run `/mcp` inside Claude Code — `nexus` should appear as connected.
-
-**Available tools (10):**
-
-| Tool | Description |
-|---|---|
-| `nexus_encode` | Store information in long-term memory |
-| `nexus_recall` | Retrieve memories by natural-language query |
-| `nexus_get_context` | Inject working memory into the current prompt |
-| `nexus_how_well_do_i_know` | Confidence check on a topic |
-| `nexus_knowledge_gaps` | List topics NEXUS knows it doesn't know |
-| `nexus_pin` | Mark a memory as permanent (never decayed) |
-| `nexus_forget` | Archive a memory |
-| `nexus_consolidate` | Run a consolidation cycle |
-| `nexus_stats` | System-wide statistics |
-| `nexus_get_suggestions` | Proactive insights from background consolidation |
-
-**LLM options** — set during install or via environment variables:
-
-| Model | Provider | Requires |
-|---|---|---|
-| `mistral` (default) | Local Ollama | `ollama pull mistral` |
-| `claude-*` | Anthropic | `NEXUS_LLM_API_KEY` |
-| `gpt-*` | OpenAI | `NEXUS_LLM_API_KEY` |
-| `gemini*` | Google | `NEXUS_LLM_API_KEY` |
+See [Quick Start — Claude Code (MCP)](#quick-start--claude-code-mcp) above for one-command setup.
 
 ---
 
