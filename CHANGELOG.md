@@ -5,16 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.9] - 2026-03-19
+## [0.1.14] - 2026-03-27
+
+### Fixed
+- **Claude Code Hooks**: Fixed JSON schema for hooks in `install_nexus_mcp.sh` — now uses the correct two-level nesting with matcher groups so `nexus_recall`, `nexus_encode`, and `nexus_get_context` hooks trigger properly
+- **Install Script**: Added required `"matcher"` field to all hook definitions
+
+### Changed
+- **README**: Promoted MCP-based Claude Code setup to a top-level "Quick Start" section for better discoverability
+
+## [0.1.13] - 2026-03-19
 
 ### Added
 - **MCP Server** (`nexus/integrations/mcp_server.py`): Exposes NEXUS as a Claude Code MCP server via stdio transport
   - 10 tools: `nexus_encode`, `nexus_recall`, `nexus_get_context`, `nexus_how_well_do_i_know`, `nexus_knowledge_gaps`, `nexus_pin`, `nexus_forget`, `nexus_consolidate`, `nexus_stats`, `nexus_get_suggestions`
   - LLM provider auto-detected from model name prefix (`claude-*` → Anthropic, `gpt-*` → OpenAI, `gemini*` → Gemini, else Ollama)
   - Configured via environment variables: `NEXUS_STORAGE_PATH`, `NEXUS_LLM_MODEL`, `NEXUS_LLM_API_KEY`
-- **Install script** (`install_nexus_mcp.sh`): One-command setup that installs the package, detects the correct Python, prompts for LLM config, and patches `~/.claude.json`
+- **Install script** (`install_nexus_mcp.sh`): One-command setup that installs `nexus-memory[mcp]` in a dedicated venv, sets up git hooks, adds a `SessionStart` hook for Claude Code, patches `~/.claude.json` safely, and validates Ollama models
 - **31 MCP server tests** covering all tools, routing logic, error handling, and edge cases
-- `pip install nexus-memory[mcp]` installs MCP server dependencies
+- LongMemEval benchmark integration and updated benchmark results in README
+
+### Changed
+- **LangChain Integration**: `NexusLangChainHistory.messages` now injects both **System 2** (abstract knowledge from the Semantic Palace) and **System 1** (raw episodic events from the Episode Buffer) into the LLM context, achieving true Dual-Process memory recall.
+- **LLM Interface**: `generate_json()` now accepts and forwards a `max_tokens` parameter (default `4096`) for finer control over JSON generation responses.
+
+### Fixed
+- **Episode Buffer**: `search_semantic` now falls back to SQLite for consolidated episodes by using `self.get()` instead of `self._episodes.get()`, which previously missed any episode that had been consolidated out of memory. Also over-fetches candidates and truncates to correctly respect `top_k`.
 
 ## [0.1.1] - 2025-03-03
 
