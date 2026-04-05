@@ -67,6 +67,11 @@ class ConsolidationEngine:
         unconsolidated = self.buffer.unconsolidated_count
         total_memories = len(self.palace.memories)
 
+        # Deep trigger: any highly salient unconsolidated memory waiting
+        # Threshold is 0.55 because Mistral/heuristic scoring rarely exceeds 0.6-0.7
+        if self.buffer.get_high_salience(min_composite=0.55, limit=1):
+            return ConsolidationDepth.FULL
+
         # Deep trigger: large unconsolidated backlog (check FULL first!)
         if unconsolidated >= self.config.episode_buffer_trigger * 4:
             return ConsolidationDepth.FULL
@@ -191,7 +196,7 @@ class ConsolidationEngine:
     def _process_chunking(self) -> Dict:
         """Group related unconsolidated episodes into chunks."""
         episodes = self.buffer.get_unconsolidated(limit=50)
-        if len(episodes) < 3:
+        if not episodes:
             return {"chunks_created": 0}
 
         chunks_created = 0
@@ -201,6 +206,8 @@ class ConsolidationEngine:
 
         for group in groups:
             if len(group) < 2:
+                # Singleton: mark consolidated so it doesn't block the buffer
+                self.buffer.mark_consolidated([ep.id for ep in group])
                 continue
 
             # Ask LLM to create chunk summary
@@ -276,14 +283,15 @@ class ConsolidationEngine:
 
         # Get recent high-salience episodes
         episodes = self.buffer.get_high_salience(min_composite=0.5, limit=30)
-        if len(episodes) < 3:
+        if not episodes:
             return {"reflections_created": 0}
 
         # Group and reflect
         groups = self._group_similar_episodes(episodes, threshold=0.5)
 
         for group in groups:
-            if len(group) < 3:
+            # We allow reflection on highly salient single episodes
+            if len(group) < 2 and group[0].salience.composite < 0.7:
                 continue
 
             contents = [ep.content for ep in group]
@@ -316,6 +324,9 @@ class ConsolidationEngine:
                 )
                 self.palace.place_memory(memory_l2)
                 reflections_created += 1
+
+            # Mark processed episodes as consolidated so they don't block the buffer
+            self.buffer.mark_consolidated([ep.id for ep in group])
 
         return {"reflections_created": reflections_created}
 

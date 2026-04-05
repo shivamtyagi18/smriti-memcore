@@ -85,36 +85,86 @@ class AttentionGate:
         Fast heuristic salience scoring (no LLM call).
         Used during high-throughput periods or when LLM is unavailable.
         """
-        # Simple heuristics
+        content_lower = content.lower()
         content_len = len(content)
+
+        # Content-type detection
         has_question = "?" in content
-        has_instruction = any(w in content.lower() for w in [
+        has_instruction = any(w in content_lower for w in [
             "always", "never", "must", "should", "remember", "important",
             "don't forget", "note that", "key point",
         ])
         has_code = "```" in content or "def " in content or "class " in content
-        has_error = any(w in content.lower() for w in [
+        has_error = any(w in content_lower for w in [
             "error", "bug", "fail", "crash", "exception", "warning",
         ])
+        has_personal_fact = any(w in content_lower for w in [
+            "my name", "i am", "i'm", "i live", "i work", "i prefer",
+            "i like", "i hate", "i use", "my favorite", "my job",
+            "born in", "grew up", "married", "wife", "husband",
+        ])
+        has_knowledge_update = any(w in content_lower for w in [
+            "switched", "changed", "migrated", "updated", "replaced",
+            "no longer", "instead of", "now using", "promoted",
+            "moved to", "upgraded", "downgraded",
+        ])
         is_short = content_len < 20
+        is_substantive = content_len > 50
+
+        # Base scores — differentiated by content type
+        surprise = 0.3
+        relevance = 0.4
+        emotional = 0.2
+        novelty = 0.5
+        utility = 0.4
+
+        if has_error:
+            surprise = 0.7
+            emotional = 0.6
+            utility = 0.7
+
+        if has_instruction:
+            relevance = 0.8
+            utility = 0.9
+
+        if has_code:
+            utility = 0.8
+            novelty = 0.6
+
+        if has_personal_fact:
+            relevance = 0.9
+            novelty = 0.7
+            utility = 0.7
+
+        if has_knowledge_update:
+            surprise = 0.7
+            novelty = 0.8
+            relevance = 0.7
+            utility = 0.7
+
+        if has_question:
+            relevance = max(relevance, 0.6)
+
+        # Length adjustments
+        if is_short:
+            utility *= 0.5
+            relevance *= 0.5
+        elif is_substantive:
+            utility = max(utility, 0.5)
 
         salience = SalienceScore(
-            surprise=0.6 if has_error else 0.3,
-            relevance=0.7 if has_question or has_instruction else 0.4,
-            emotional=0.6 if has_error else 0.2,
-            novelty=0.5,
-            utility=0.8 if has_instruction or has_code else 0.4,
+            surprise=surprise,
+            relevance=relevance,
+            emotional=emotional,
+            novelty=novelty,
+            utility=utility,
         )
 
-        # Very short messages are usually low salience
-        if is_short:
-            salience.utility *= 0.5
-            salience.relevance *= 0.5
-
-        # Source adjustments
+        # Source-based boosts — user-stated content is inherently important
         if source == MemorySource.USER_STATED:
-            salience.relevance = max(salience.relevance, 0.8)
-            salience.utility = max(salience.utility, 0.7)
+            salience.relevance = max(salience.relevance, 0.9)
+            salience.utility = max(salience.utility, 0.8)
+            salience.novelty = max(salience.novelty, 0.6)
 
         return salience
 

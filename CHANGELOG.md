@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0] - 2026-04-05
+
+### Fixed
+- **Consolidation Scheduling**: Added high-salience trigger — any unconsolidated episode with composite salience ≥ 0.55 now immediately triggers FULL consolidation, instead of waiting for 50+ episodes to accumulate
+- **Singleton Episode Leak**: Episodes that don't cluster with others during chunking are now properly marked as consolidated, preventing them from blocking the buffer indefinitely
+- **Contradiction Detection**: Updated LLM prompt to explicitly distinguish between genuine contradictions and mere similarity/redundancy — prevents Mistral from incorrectly superseding agreeing memories
+- **Reflection on Single Episodes**: Highly salient single episodes (≥ 0.7) can now generate reflections on their own, instead of requiring groups of 3+
+- **Reflection Buffer Cleanup**: Episodes processed by reflection are now marked consolidated so they don't re-trigger consolidation cycles
+
+### Changed
+- **Heuristic Salience Scoring**: Overhauled `score_fast` to produce differentiated scores based on content type — personal facts, knowledge updates, instructions, and code now score significantly higher than generic content. User-stated facts score 0.65–0.73 (full encoding) vs trivial messages at 0.24 (summary)
+- **Chunking Minimum Removed**: `_process_chunking` no longer requires 3+ episodes to run — works with any number of episodes
+
+### Benchmarked
+- Validated across 4 models (gpt-4o-mini, Mistral 7B, CodeLlama 7B, Llama 3.2 3B) on LoCoMo dataset with consolidation enabled
+- Unconsolidated episode leak eliminated (11 → 0 across all models)
+- Best local model: CodeLlama 7B (F1=0.317, Exact Match=0.200)
+
 ## [0.1.14] - 2026-03-27
 
 ### Fixed
