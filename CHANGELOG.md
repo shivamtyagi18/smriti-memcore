@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2026-04-05
+
+### Fixed
+- **MCP Server**: Fixed `nexus_consolidate` response key mismatch — previously always returned `processed: 0` and a bare depth string instead of actual process count and status. Now correctly reports successful process count, process names, and handles the deferred case explicitly
+
+### Changed
+- **README**: Updated benchmark tables with validated v1.0.0 results across 4 models (gpt-4o-mini, Mistral 7B, CodeLlama 7B, Llama 3.2 3B). Added local model comparison section and "What's New in v1.0.0" section
+
 ## [1.0.0] - 2026-04-05
 
 ### Fixed

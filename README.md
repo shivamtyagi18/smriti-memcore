@@ -6,6 +6,7 @@ NEXUS combines a capacity-bounded Working Memory, a graph-based Semantic Palace,
 
 > 📄 **Paper:** *NEXUS: A Scalable, Neuro-Inspired Architecture for Long-Term Event Memory in LLM Agents* — Shivam Tyagi, 2025 — [DOI: 10.13140/RG.2.2.25477.82407](https://doi.org/10.13140/RG.2.2.25477.82407)
 
+[![PyPI](https://img.shields.io/pypi/v/nexus-memory.svg)](https://pypi.org/project/nexus-memory/)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
@@ -279,41 +280,56 @@ config = NexusConfig(
 
 ---
 
+## What's New in v1.0.0
+
+- **Consolidation robustness overhaul** — fixed a critical bug where singleton episodes leaked in the buffer indefinitely, causing consolidation to report "no significant memories" even when important facts were present
+- **Smarter salience scoring** — the heuristic scorer now differentiates content types (personal facts, knowledge updates, instructions) instead of scoring everything the same
+- **Better contradiction detection** — Mistral no longer incorrectly discards memories that agree with existing ones
+- **Validated across 4 models** — benchmarked with gpt-4o-mini, Mistral 7B, CodeLlama 7B, and Llama 3.2 3B
+
+See [CHANGELOG.md](CHANGELOG.md) for full details.
+
+---
+
 ## Benchmarks
 
-NEXUS was benchmarked against four baseline architectures on the [LoCoMo](https://github.com/snap-research/locomo) long-sequence conversational dataset (419 dialog turns):
+### LoCoMo (Multi-System Comparison)
 
-| System | F1 Score | Latency (p95) | Ingestion Time |
-|---|---|---|---|
-| FullContext | 0.040 | 9.07s | 0.0s |
-| MemGPT-style | 0.025 | 10.16s | ~15 min |
-| Mem0-style | 0.024 | 8.39s | ~45 min |
-| NaiveRAG | 0.012 | 8.07s | 9.4s |
-| **NEXUS v2** | 0.010 | **7.62s** | **32.1s** |
+NEXUS was benchmarked against four baseline architectures on the [LoCoMo](https://github.com/snap-research/locomo) long-sequence dataset (28 dialog turns, 15 evaluation questions, consolidation enabled):
+
+| System | F1 Score | Latency | Tokens/Query | Consolidation |
+|---|---|---|---|---|
+| FullContext | **0.345** | 1147ms | 550 | — |
+| MemGPT-style | 0.334 | 1397ms | 478 | — |
+| NaiveRAG | 0.312 | 1387ms | 145 | — |
+| **NEXUS v2** | 0.279 | 1317ms | **146** | 41.2s (async) |
+| Mem0-style | 0.235 | 1088ms | 106 | — |
+
+*Results with GPT-4o-mini. NEXUS consolidation runs asynchronously and does not block queries.*
+
+### Local Model Comparison (v1.0.0)
+
+All runs use the fixed consolidation pipeline with heuristic scoring:
+
+| Model | F1 Score | Exact Match | Latency | Best Category |
+|---|---|---|---|---|
+| **CodeLlama 7B** | **0.317** | **0.200** | 5634ms | Temporal (0.682) |
+| Mistral 7B | 0.284 | 0.067 | 3181ms | Knowledge Update (0.516) |
+| gpt-4o-mini | 0.262 | 0.000 | 1271ms | Single-hop (0.350) |
+| Llama 3.2 3B | 0.184 | 0.067 | 1446ms | Multi-hop (0.134) |
+
+**Key finding:** CodeLlama 7B outperforms all models on temporal reasoning (F1=0.682) and achieves the highest exact-match rate (20%). Mistral 7B remains the best all-rounder with strong knowledge-update handling.
 
 ### LongMemEval (Long-Term Interactive Memory)
 
-NEXUS integrates an evaluation harness for the [LongMemEval](https://github.com/xiaowu0162/LongMemEval) benchmark to rigorously test an LLM assistant's ability to maintain context over 50+ chat sessions.
-
-In our exact-match recall tests over isolated needle-in-a-haystack multi-session transcripts, NEXUS achieves highly competitive factual precision with a fraction of the computational latency by utilizing its Dual-Process semantic routing:
+NEXUS integrates an evaluation harness for the [LongMemEval](https://github.com/xiaowu0162/LongMemEval) benchmark to test retrieval over 50+ chat sessions:
 
 | System Configuration | Exact Match Accuracy | Average Query Latency |
 |---|---|---|
 | **Baseline (Full Context)** | 100.0% | 11.98s |
 | **NEXUS Dual-Process** | **80.0%** | **0.98s** |
 
-*NEXUS restricts the LLM context envelope to only the most relevant episodic graph nodes, resulting in a **>12× latency reduction** compared to standard context-stuffing.*
-
-To run the full 500-question benchmark with GPT-4o-mini as the evaluator:
-
-```bash
-# 1. Download the cleaned JSON datasets to data/longmemeval/
-# 2. Run the baseline LLM (Standard ConversationBufferMemory):
-python benchmarks/longmem_eval.py --baseline
-
-# 3. Run the optimized NEXUS Dual-Process Evaluator:
-python benchmarks/longmem_eval.py
-```
+*NEXUS restricts the LLM context to the 5 most relevant memories, resulting in a **>12× latency reduction** compared to context-stuffing.*
 
 ### Vector Search Backend
 
@@ -326,12 +342,20 @@ NEXUS supports two vector search backends. FAISS is auto-detected when installed
 
 At scale, FAISS is **1.2× faster** with **150,000× less memory**.
 
-To reproduce:
+### Reproducing Benchmarks
 
 ```bash
 pip install -e ".[benchmarks]"
-python benchmarks/run_benchmark.py --systems nexus naiverag fullcontext --dataset locomo
-python benchmarks/vector_benchmark.py   # NumPy vs FAISS comparison
+
+# Multi-system comparison (requires API key)
+python benchmarks/run_benchmark.py --model gpt-4o-mini --systems nexus --consolidate --dataset locomo
+
+# Local model comparison (requires Ollama)
+python benchmarks/run_benchmark.py --model mistral --systems nexus --consolidate --dataset locomo
+python benchmarks/run_benchmark.py --model codellama --systems nexus --consolidate --dataset locomo
+
+# Vector backend comparison
+python benchmarks/vector_benchmark.py
 ```
 
 ---

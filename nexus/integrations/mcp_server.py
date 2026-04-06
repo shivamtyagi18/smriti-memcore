@@ -270,10 +270,29 @@ def nexus_consolidate(depth: str = "light") -> Dict[str, Any]:
         return {"error": "depth must be 'light' or 'full'"}
     try:
         result = _nexus.consolidate(depth=depth)
+
+        # Handle deferred (scheduler decided no consolidation needed)
+        if result.get("status") == "deferred":
+            return {
+                "depth": depth,
+                "status": "deferred",
+                "processed": 0,
+                "summary": result.get("reason", "no consolidation needed"),
+                "elapsed_seconds": 0,
+            }
+
+        # Normal consolidation result — count successful processes
+        processes = result.get("processes", {})
+        processed_count = sum(
+            1 for p in processes.values()
+            if isinstance(p, dict) and "error" not in p
+        )
         return {
-            "depth": depth,
-            "processed": result.get("total_processed", result.get("processed", 0)),
-            "summary": str(result.get("summary", result.get("depth", depth))),
+            "depth": result.get("depth", depth),
+            "status": "completed",
+            "processed": processed_count,
+            "processes": list(processes.keys()),
+            "summary": f"{result.get('depth', depth)} consolidation: {processed_count} processes ran",
             "elapsed_seconds": result.get("elapsed_seconds", 0),
         }
     except Exception as e:
