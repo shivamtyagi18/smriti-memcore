@@ -1,8 +1,8 @@
 """Tests for smriti.llm_interface — error handling, retries, API key checks."""
 
 import pytest
-from smriti.llm_interface import LLMInterface, LLMResponse
-from smriti.metrics import SmritiMetrics
+from smriti_memcore.llm_interface import LLMInterface, LLMResponse
+from smriti_memcore.metrics import SmritiMetrics
 
 
 class TestLLMResponse:

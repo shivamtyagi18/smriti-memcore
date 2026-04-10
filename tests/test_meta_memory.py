@@ -1,8 +1,8 @@
 """Tests for smriti.meta_memory — confidence mapping, gap tracking."""
 
 import pytest
-from smriti.models import ConfidenceLevel, DecisionType
-from smriti.meta_memory import MetaMemory, _topic_overlap
+from smriti_memcore.models import ConfidenceLevel, DecisionType
+from smriti_memcore.meta_memory import MetaMemory, _topic_overlap
 
 
 class TestConfidenceMap:

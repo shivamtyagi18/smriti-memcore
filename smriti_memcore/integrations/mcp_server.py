@@ -28,8 +28,8 @@ except ImportError:
         "pip install smriti-memory[mcp]"
     )
 
-from smriti.core import SMRITI
-from smriti.models import (
+from smriti_memcore.core import SMRITI
+from smriti_memcore.models import (
     ConsolidationDepth,
     Memory,
     MemorySource,
@@ -74,7 +74,7 @@ def build_smriti_config() -> SmritiConfig:
 
 
 # Module-level SMRITI instance — initialized at startup, shared across tool calls.
-# Tests replace this: `import smriti.integrations.mcp_server as s; s._smriti = test_instance`
+# Tests replace this: `import smriti_memcore.integrations.mcp_server as s; s._smriti = test_instance`
 _smriti: Optional[SMRITI] = None
 
 mcp_server = FastMCP("smriti-memory")

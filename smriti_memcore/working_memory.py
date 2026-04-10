@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Callable, Dict, List, Optional
 
-from smriti.models import Memory
+from smriti_memcore.models import Memory
 
 logger = logging.getLogger(__name__)
 

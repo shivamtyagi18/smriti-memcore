@@ -3,8 +3,8 @@
 import pytest
 from unittest.mock import MagicMock
 
-from smriti.models import SmritiConfig, MemorySource, SalienceScore, Episode
-from smriti.attention_gate import AttentionGate
+from smriti_memcore.models import SmritiConfig, MemorySource, SalienceScore, Episode
+from smriti_memcore.attention_gate import AttentionGate
 
 
 class TestScoreFast:

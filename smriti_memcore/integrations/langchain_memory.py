@@ -15,7 +15,7 @@ except ImportError:
         "pip install langchain-core"
     )
 
-from smriti.core import SMRITI
+from smriti_memcore.core import SMRITI
 
 class SmritiLangChainHistory(BaseChatMessageHistory):
     """

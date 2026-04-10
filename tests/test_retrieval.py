@@ -1,8 +1,8 @@
 """Tests for smriti.retrieval — multi-hop search, spreading activation."""
 
 import pytest
-from smriti.models import SmritiConfig, Memory, SalienceScore
-from smriti.retrieval import RetrievalEngine
+from smriti_memcore.models import SmritiConfig, Memory, SalienceScore
+from smriti_memcore.retrieval import RetrievalEngine
 
 
 class TestBasicRetrieval:

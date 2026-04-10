@@ -1,8 +1,8 @@
 """Tests for smriti.working_memory — capacity, dedup, eviction, priority."""
 
 import pytest
-from smriti.models import Memory, SalienceScore, MemorySource
-from smriti.working_memory import WorkingMemory, EvictionRecord
+from smriti_memcore.models import Memory, SalienceScore, MemorySource
+from smriti_memcore.working_memory import WorkingMemory, EvictionRecord
 
 
 class TestAdmit:

@@ -13,8 +13,8 @@ from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_core.messages import HumanMessage, AIMessage
 
 # SMRITI imports
-from smriti.core import SMRITI, SmritiConfig
-from smriti.integrations.langchain_memory import SmritiLangChainHistory
+from smriti_memcore.core import SMRITI, SmritiConfig
+from smriti_memcore.integrations.langchain_memory import SmritiLangChainHistory
 
 # Simple exact/fuzzy match for evaluation
 def compute_accuracy(prediction: str, ground_truth: str) -> float:
@@ -30,7 +30,7 @@ def compute_accuracy(prediction: str, ground_truth: str) -> float:
     return 0.0
 
 from datetime import datetime
-from smriti.models import Episode, SalienceScore, MemorySource
+from smriti_memcore.models import Episode, SalienceScore, MemorySource
 
 def process_case_smriti(test_case: Dict[str, Any], temp_dir: str) -> Dict[str, Any]:
     """Runs a single LongMemEval case through a SMRITI-augmented LangChain agent."""

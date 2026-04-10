@@ -3,8 +3,8 @@
 import os
 import threading
 import pytest
-from smriti.models import Memory, SalienceScore, MemorySource, MemoryStatus
-from smriti.palace import SemanticPalace
+from smriti_memcore.models import Memory, SalienceScore, MemorySource, MemoryStatus
+from smriti_memcore.palace import SemanticPalace
 
 
 class TestRoomCreation:

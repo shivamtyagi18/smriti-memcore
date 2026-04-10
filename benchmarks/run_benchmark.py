@@ -26,9 +26,9 @@ except ImportError:
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from smriti.models import SmritiConfig
-from smriti.llm_interface import LLMInterface
-from smriti.vector_store import VectorStore
+from smriti_memcore.models import SmritiConfig
+from smriti_memcore.llm_interface import LLMInterface
+from smriti_memcore.vector_store import VectorStore
 
 from baselines.naive_rag import NaiveRAG
 from baselines.full_context import FullContext

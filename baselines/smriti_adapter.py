@@ -12,9 +12,9 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from typing import Dict, List, Optional
 
 from baselines.base import BaseMemorySystem, MemoryResponse
-from smriti.core import SMRITI
-from smriti.models import MemorySource, SmritiConfig
-from smriti.llm_interface import LLMInterface
+from smriti_memcore.core import SMRITI
+from smriti_memcore.models import MemorySource, SmritiConfig
+from smriti_memcore.llm_interface import LLMInterface
 
 
 class SmritiAdapter(BaseMemorySystem):
@@ -88,7 +88,7 @@ Answer:"""
 
     def run_consolidation(self):
         """Run FULL consolidation on the SMRITI memory system."""
-        from smriti.models import ConsolidationDepth
+        from smriti_memcore.models import ConsolidationDepth
         self.smriti.consolidation_engine.consolidate(depth=ConsolidationDepth.FULL)
 
     def get_stats(self) -> Dict:

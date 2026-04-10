@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from typing import Dict, List, Optional
 
 from baselines.base import BaseMemorySystem, MemoryResponse
-from smriti.llm_interface import LLMInterface
+from smriti_memcore.llm_interface import LLMInterface
 
 
 class FullContext(BaseMemorySystem):

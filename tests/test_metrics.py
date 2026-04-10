@@ -1,7 +1,7 @@
 """Tests for smriti.metrics — counters, gauges, histograms, export."""
 
 import pytest
-from smriti.metrics import SmritiMetrics
+from smriti_memcore.metrics import SmritiMetrics
 
 
 class TestCounter:

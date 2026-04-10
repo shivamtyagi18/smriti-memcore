@@ -9,10 +9,10 @@ from __future__ import annotations
 import logging
 from typing import Optional
 
-from smriti.models import (
+from smriti_memcore.models import (
     Episode, Memory, MemorySource, SmritiConfig, SalienceScore,
 )
-from smriti.llm_interface import LLMInterface
+from smriti_memcore.llm_interface import LLMInterface
 
 logger = logging.getLogger(__name__)
 

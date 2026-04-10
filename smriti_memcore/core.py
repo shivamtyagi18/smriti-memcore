@@ -11,20 +11,20 @@ import os
 import time
 from typing import Any, Dict, List, Optional
 
-from smriti.models import (
+from smriti_memcore.models import (
     ConfidenceLevel, DecisionType, Episode, Memory, MemorySource,
     MemoryStatus, Modality, SmritiConfig, SalienceScore,
 )
-from smriti.llm_interface import LLMInterface
-from smriti.vector_store import VectorStore
-from smriti.episode_buffer import EpisodeBuffer
-from smriti.palace import SemanticPalace
-from smriti.working_memory import WorkingMemory
-from smriti.attention_gate import AttentionGate
-from smriti.retrieval import RetrievalEngine
-from smriti.consolidation import ConsolidationEngine
-from smriti.meta_memory import MetaMemory
-from smriti.metrics import SmritiMetrics
+from smriti_memcore.llm_interface import LLMInterface
+from smriti_memcore.vector_store import VectorStore
+from smriti_memcore.episode_buffer import EpisodeBuffer
+from smriti_memcore.palace import SemanticPalace
+from smriti_memcore.working_memory import WorkingMemory
+from smriti_memcore.attention_gate import AttentionGate
+from smriti_memcore.retrieval import RetrievalEngine
+from smriti_memcore.consolidation import ConsolidationEngine
+from smriti_memcore.meta_memory import MetaMemory
+from smriti_memcore.metrics import SmritiMetrics
 
 logger = logging.getLogger(__name__)
 
@@ -233,7 +233,7 @@ class SMRITI:
         If depth is None, the scheduler decides automatically.
         Otherwise, force a specific depth: 'full', 'light', or 'defer'.
         """
-        from smriti.models import ConsolidationDepth
+        from smriti_memcore.models import ConsolidationDepth
 
         if isinstance(depth, str):
             depth = ConsolidationDepth(depth)

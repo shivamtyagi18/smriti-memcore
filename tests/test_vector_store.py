@@ -4,7 +4,7 @@ import os
 import numpy as np
 import pytest
 
-from smriti.vector_store import VectorStore
+from smriti_memcore.vector_store import VectorStore
 
 
 class TestEmbedding:

@@ -16,14 +16,14 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 
-from smriti.models import (
+from smriti_memcore.models import (
     ConsolidationDepth, Memory, MemorySource, MemoryStatus,
     MemoryTombstone, SmritiConfig, Skill, SalienceScore,
 )
-from smriti.episode_buffer import EpisodeBuffer
-from smriti.palace import SemanticPalace
-from smriti.vector_store import VectorStore
-from smriti.llm_interface import LLMInterface
+from smriti_memcore.episode_buffer import EpisodeBuffer
+from smriti_memcore.palace import SemanticPalace
+from smriti_memcore.vector_store import VectorStore
+from smriti_memcore.llm_interface import LLMInterface
 
 logger = logging.getLogger(__name__)
 
@@ -598,7 +598,7 @@ class ConsolidationEngine:
 
     def _merge_rooms(self, keeper: Room, merged: Room):
         """Merge two overlapping rooms into one."""
-        from smriti.palace import Room
+        from smriti_memcore.palace import Room
         # Move all memories from merged to keeper
         for mid in merged.memory_ids:
             if mid in self.palace.memories:

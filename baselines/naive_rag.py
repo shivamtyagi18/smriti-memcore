@@ -15,8 +15,8 @@ from typing import Dict, List, Optional
 import numpy as np
 
 from baselines.base import BaseMemorySystem, MemoryResponse
-from smriti.vector_store import VectorStore
-from smriti.llm_interface import LLMInterface
+from smriti_memcore.vector_store import VectorStore
+from smriti_memcore.llm_interface import LLMInterface
 
 
 class NaiveRAG(BaseMemorySystem):

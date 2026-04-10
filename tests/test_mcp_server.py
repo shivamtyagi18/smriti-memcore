@@ -6,9 +6,9 @@ from datetime import datetime
 
 import pytest
 
-from smriti.models import Memory, MemorySource, MemoryStatus, Modality, SmritiConfig, SalienceScore
-from smriti.core import SMRITI
-import smriti.integrations.mcp_server as _mcp_module
+from smriti_memcore.models import Memory, MemorySource, MemoryStatus, Modality, SmritiConfig, SalienceScore
+from smriti_memcore.core import SMRITI
+import smriti_memcore.integrations.mcp_server as _mcp_module
 
 
 @pytest.fixture
@@ -34,7 +34,7 @@ def _is_json_serializable(obj) -> bool:
 
 def test_serialize_memory_is_json_safe():
     """serialize_memory output must be JSON-serializable."""
-    from smriti.integrations.mcp_server import serialize_memory
+    from smriti_memcore.integrations.mcp_server import serialize_memory
 
     mem = Memory(
         content="test content",
@@ -51,7 +51,7 @@ def test_serialize_memory_is_json_safe():
 
 def test_serialize_memory_enum_values():
     """Enums must be serialized to their .value strings."""
-    from smriti.integrations.mcp_server import serialize_memory
+    from smriti_memcore.integrations.mcp_server import serialize_memory
 
     mem = Memory(source=MemorySource.USER_STATED, modality=Modality.CODE)
     result = serialize_memory(mem)
@@ -61,7 +61,7 @@ def test_serialize_memory_enum_values():
 
 def test_serialize_memory_datetime_iso():
     """datetime fields must be ISO strings."""
-    from smriti.integrations.mcp_server import serialize_memory
+    from smriti_memcore.integrations.mcp_server import serialize_memory
 
     dt = datetime(2026, 3, 19, 12, 0, 0)
     mem = Memory(creation_time=dt, last_accessed=dt)
@@ -72,7 +72,7 @@ def test_serialize_memory_datetime_iso():
 
 def test_serialize_memory_expected_keys():
     """Output must contain the core fields expected by MCP consumers."""
-    from smriti.integrations.mcp_server import serialize_memory
+    from smriti_memcore.integrations.mcp_server import serialize_memory
 
     mem = Memory(content="hello")
     result = serialize_memory(mem)
@@ -90,7 +90,7 @@ def test_build_smriti_config_defaults(tmp_path, monkeypatch):
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     monkeypatch.delenv("GEMINI_API_KEY", raising=False)
 
-    from smriti.integrations.mcp_server import build_smriti_config
+    from smriti_memcore.integrations.mcp_server import build_smriti_config
     config = build_smriti_config()
     assert config.storage_path == str(tmp_path)
     assert config.llm_model == "mistral"
@@ -106,7 +106,7 @@ def test_build_smriti_config_anthropic_routing(tmp_path, monkeypatch):
     monkeypatch.setenv("SMRITI_LLM_API_KEY", "sk-ant-test")
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
 
-    from smriti.integrations.mcp_server import build_smriti_config
+    from smriti_memcore.integrations.mcp_server import build_smriti_config
     config = build_smriti_config()
     assert config.llm_model == "claude-sonnet-4-6"
     assert config.anthropic_api_key == "sk-ant-test"
@@ -120,7 +120,7 @@ def test_build_smriti_config_openai_routing(tmp_path, monkeypatch):
     monkeypatch.setenv("SMRITI_LLM_API_KEY", "sk-openai-test")
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
 
-    from smriti.integrations.mcp_server import build_smriti_config
+    from smriti_memcore.integrations.mcp_server import build_smriti_config
     config = build_smriti_config()
     assert config.openai_api_key == "sk-openai-test"
     assert config.anthropic_api_key == ""   # "" not None
@@ -132,7 +132,7 @@ def test_llm_model_ollama_routing(tmp_path, monkeypatch):
     monkeypatch.setenv("SMRITI_LLM_MODEL", "mistral")
     monkeypatch.delenv("SMRITI_LLM_API_KEY", raising=False)
 
-    from smriti.integrations.mcp_server import build_smriti_config
+    from smriti_memcore.integrations.mcp_server import build_smriti_config
     config = build_smriti_config()
     assert config.anthropic_api_key == ""
     assert config.openai_api_key == ""
@@ -145,7 +145,7 @@ def test_build_smriti_config_expands_tilde(monkeypatch):
     monkeypatch.delenv("SMRITI_LLM_MODEL", raising=False)
     monkeypatch.delenv("SMRITI_LLM_API_KEY", raising=False)
 
-    from smriti.integrations.mcp_server import build_smriti_config
+    from smriti_memcore.integrations.mcp_server import build_smriti_config
     config = build_smriti_config()
     assert not config.storage_path.startswith("~")
     assert config.storage_path == os.path.expanduser("~/.smriti/test")
@@ -164,7 +164,7 @@ def inject_smriti(tmp_smriti):
 
 def test_encode_returns_memory_id():
     """smriti_encode returns a memory_id string for salient content."""
-    from smriti.integrations.mcp_server import smriti_encode
+    from smriti_memcore.integrations.mcp_server import smriti_encode
     result = smriti_encode(content="Python is preferred for backend services")
     assert "memory_id" in result
     assert isinstance(result["memory_id"], str)
@@ -173,7 +173,7 @@ def test_encode_returns_memory_id():
 
 def test_encode_discarded_on_empty():
     """smriti_encode returns discarded status for empty/whitespace content."""
-    from smriti.integrations.mcp_server import smriti_encode
+    from smriti_memcore.integrations.mcp_server import smriti_encode
     result = smriti_encode(content="   ")
     assert result.get("memory_id") is None
     assert result.get("status") == "discarded"
@@ -181,21 +181,21 @@ def test_encode_discarded_on_empty():
 
 def test_encode_source_default_is_direct():
     """smriti_encode defaults source to 'direct', not 'user_stated'."""
-    from smriti.integrations.mcp_server import smriti_encode
+    from smriti_memcore.integrations.mcp_server import smriti_encode
     result = smriti_encode(content="Default source test content")
     assert "memory_id" in result
 
 
 def test_recall_returns_list():
     """smriti_recall returns a list (empty when store is empty)."""
-    from smriti.integrations.mcp_server import smriti_recall
+    from smriti_memcore.integrations.mcp_server import smriti_recall
     result = smriti_recall(query="anything")
     assert isinstance(result, list)
 
 
 def test_recall_returns_serializable():
     """smriti_recall output is fully JSON-serializable."""
-    from smriti.integrations.mcp_server import smriti_encode, smriti_recall
+    from smriti_memcore.integrations.mcp_server import smriti_encode, smriti_recall
     smriti_encode(content="LangChain integration uses BaseChatMessageHistory")
     memories = smriti_recall(query="LangChain")
     assert _is_json_serializable(memories)
@@ -203,7 +203,7 @@ def test_recall_returns_serializable():
 
 def test_recall_memory_has_expected_keys():
     """Each recalled memory dict has the required keys."""
-    from smriti.integrations.mcp_server import smriti_encode, smriti_recall
+    from smriti_memcore.integrations.mcp_server import smriti_encode, smriti_recall
     smriti_encode(content="SMRITI uses a semantic palace for memory storage")
     memories = smriti_recall(query="semantic palace")
     if memories:  # may be empty if attention gate discards
@@ -214,7 +214,7 @@ def test_recall_memory_has_expected_keys():
 
 def test_get_context_returns_string():
     """smriti_get_context returns a dict with a 'context' string key."""
-    from smriti.integrations.mcp_server import smriti_get_context
+    from smriti_memcore.integrations.mcp_server import smriti_get_context
     result = smriti_get_context()
     assert "context" in result
     assert isinstance(result["context"], str)
@@ -223,7 +223,7 @@ def test_get_context_returns_string():
 
 def test_how_well_do_i_know_all_fields():
     """Returns all 6 required fields including decision."""
-    from smriti.integrations.mcp_server import smriti_how_well_do_i_know
+    from smriti_memcore.integrations.mcp_server import smriti_how_well_do_i_know
     result = smriti_how_well_do_i_know(topic="Python")
     for key in ("coverage", "freshness", "strength", "depth", "overall", "decision"):
         assert key in result, f"Missing key: {key}"
@@ -231,14 +231,14 @@ def test_how_well_do_i_know_all_fields():
 
 def test_how_well_do_i_know_decision_valid_values():
     """decision field must be one of the three DecisionType values."""
-    from smriti.integrations.mcp_server import smriti_how_well_do_i_know
+    from smriti_memcore.integrations.mcp_server import smriti_how_well_do_i_know
     result = smriti_how_well_do_i_know(topic="unknown topic xyz")
     assert result["decision"] in ("recall_confidently", "recall_but_verify", "admit_gap_and_ask")
 
 
 def test_how_well_do_i_know_numeric_fields():
     """Numeric confidence fields must be floats."""
-    from smriti.integrations.mcp_server import smriti_how_well_do_i_know
+    from smriti_memcore.integrations.mcp_server import smriti_how_well_do_i_know
     result = smriti_how_well_do_i_know(topic="anything")
     for key in ("coverage", "freshness", "strength", "overall"):
         assert isinstance(result[key], float), f"{key} must be float"
@@ -246,14 +246,14 @@ def test_how_well_do_i_know_numeric_fields():
 
 def test_knowledge_gaps_returns_list():
     """smriti_knowledge_gaps returns a list."""
-    from smriti.integrations.mcp_server import smriti_knowledge_gaps
+    from smriti_memcore.integrations.mcp_server import smriti_knowledge_gaps
     result = smriti_knowledge_gaps()
     assert isinstance(result, list)
 
 
 def test_knowledge_gaps_shape_when_populated():
     """Each gap dict has the required keys."""
-    from smriti.integrations.mcp_server import smriti_recall, smriti_knowledge_gaps
+    from smriti_memcore.integrations.mcp_server import smriti_recall, smriti_knowledge_gaps
     smriti_recall(query="extremely obscure topic that does not exist in memory xyz123")
     gaps = smriti_knowledge_gaps()
     if gaps:
@@ -266,7 +266,7 @@ def test_knowledge_gaps_shape_when_populated():
 
 def test_pin_success():
     """smriti_pin returns {status: pinned, memory_id} after pinning."""
-    from smriti.integrations.mcp_server import smriti_encode, smriti_pin
+    from smriti_memcore.integrations.mcp_server import smriti_encode, smriti_pin
     enc = smriti_encode(content="Important fact that must never be forgotten")
     if enc.get("memory_id") is None:
         pytest.skip("attention gate discarded test content")
@@ -280,14 +280,14 @@ def test_pin_success():
 
 def test_pin_not_found():
     """smriti_pin returns error dict for unknown memory_id."""
-    from smriti.integrations.mcp_server import smriti_pin
+    from smriti_memcore.integrations.mcp_server import smriti_pin
     result = smriti_pin(memory_id="nonexistent-id-xyz")
     assert "error" in result
 
 
 def test_forget_sets_archived():
     """smriti_forget returns {status: archived} and memory is ARCHIVED."""
-    from smriti.integrations.mcp_server import smriti_encode, smriti_forget
+    from smriti_memcore.integrations.mcp_server import smriti_encode, smriti_forget
     enc = smriti_encode(content="Temporary note to be forgotten after use")
     if enc.get("memory_id") is None:
         pytest.skip("attention gate discarded test content")
@@ -300,14 +300,14 @@ def test_forget_sets_archived():
 
 def test_forget_not_found():
     """smriti_forget returns error dict for unknown memory_id."""
-    from smriti.integrations.mcp_server import smriti_forget
+    from smriti_memcore.integrations.mcp_server import smriti_forget
     result = smriti_forget(memory_id="nonexistent-id-xyz")
     assert "error" in result
 
 
 def test_consolidate_light():
     """smriti_consolidate('light') returns a summary dict."""
-    from smriti.integrations.mcp_server import smriti_consolidate
+    from smriti_memcore.integrations.mcp_server import smriti_consolidate
     result = smriti_consolidate(depth="light")
     assert "depth" in result
     assert result["depth"] == "light"
@@ -315,7 +315,7 @@ def test_consolidate_light():
 
 def test_consolidate_invalid_depth():
     """smriti_consolidate with invalid depth returns error."""
-    from smriti.integrations.mcp_server import smriti_consolidate
+    from smriti_memcore.integrations.mcp_server import smriti_consolidate
     result = smriti_consolidate(depth="defer")
     assert "error" in result
     result2 = smriti_consolidate(depth="invalid")
@@ -326,7 +326,7 @@ def test_consolidate_invalid_depth():
 
 def test_stats_top_level_keys():
     """smriti_stats returns all 8 expected top-level keys."""
-    from smriti.integrations.mcp_server import smriti_stats
+    from smriti_memcore.integrations.mcp_server import smriti_stats
     result = smriti_stats()
     for key in ("palace", "working_memory", "retrieval", "consolidation",
                 "meta_memory", "episode_buffer", "vector_store", "metrics"):
@@ -335,20 +335,20 @@ def test_stats_top_level_keys():
 
 def test_stats_is_json_serializable():
     """smriti_stats output must be JSON-serializable."""
-    from smriti.integrations.mcp_server import smriti_stats
+    from smriti_memcore.integrations.mcp_server import smriti_stats
     result = smriti_stats()
     assert _is_json_serializable(result)
 
 
 def test_get_suggestions_returns_list():
     """smriti_get_suggestions returns a list."""
-    from smriti.integrations.mcp_server import smriti_get_suggestions
+    from smriti_memcore.integrations.mcp_server import smriti_get_suggestions
     result = smriti_get_suggestions()
     assert isinstance(result, list)
 
 
 def test_get_suggestions_serializable():
     """smriti_get_suggestions output is JSON-serializable."""
-    from smriti.integrations.mcp_server import smriti_get_suggestions
+    from smriti_memcore.integrations.mcp_server import smriti_get_suggestions
     result = smriti_get_suggestions()
     assert _is_json_serializable(result)

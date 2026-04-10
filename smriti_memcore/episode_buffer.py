@@ -14,8 +14,8 @@ import threading
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from smriti.models import Episode, MemorySource, SalienceScore
-from smriti.vector_store import VectorStore
+from smriti_memcore.models import Episode, MemorySource, SalienceScore
+from smriti_memcore.vector_store import VectorStore
 
 logger = logging.getLogger(__name__)
 

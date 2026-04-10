@@ -9,8 +9,8 @@ from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables.history import RunnableWithMessageHistory
 
-from smriti.core import SMRITI, SmritiConfig
-from smriti.integrations.langchain_memory import SmritiLangChainHistory
+from smriti_memcore.core import SMRITI, SmritiConfig
+from smriti_memcore.integrations.langchain_memory import SmritiLangChainHistory
 
 def main():
     print("Initialize SMRITI Memory Engine...")

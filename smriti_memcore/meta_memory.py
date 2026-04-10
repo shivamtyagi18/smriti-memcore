@@ -12,8 +12,8 @@ from collections import deque
 from datetime import datetime
 from typing import Dict, List, Optional
 
-from smriti.models import ConfidenceLevel, DecisionType, MemoryStatus
-from smriti.palace import SemanticPalace
+from smriti_memcore.models import ConfidenceLevel, DecisionType, MemoryStatus
+from smriti_memcore.palace import SemanticPalace
 
 logger = logging.getLogger(__name__)
 

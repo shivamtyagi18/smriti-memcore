@@ -4,11 +4,11 @@ import pytest
 from collections import deque
 from datetime import datetime, timedelta
 
-from smriti.models import (
+from smriti_memcore.models import (
     SmritiConfig, Memory, MemorySource, MemoryStatus,
     ConsolidationDepth, SalienceScore,
 )
-from smriti.consolidation import ConsolidationEngine
+from smriti_memcore.consolidation import ConsolidationEngine
 
 
 class TestScheduler:

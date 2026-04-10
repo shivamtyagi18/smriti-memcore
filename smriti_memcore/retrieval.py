@@ -15,10 +15,10 @@ from typing import Callable, Dict, List, Optional, Tuple
 
 import numpy as np
 
-from smriti.models import Memory, SmritiConfig
-from smriti.palace import SemanticPalace
-from smriti.working_memory import WorkingMemory
-from smriti.vector_store import VectorStore
+from smriti_memcore.models import Memory, SmritiConfig
+from smriti_memcore.palace import SemanticPalace
+from smriti_memcore.working_memory import WorkingMemory
+from smriti_memcore.vector_store import VectorStore
 
 logger = logging.getLogger(__name__)
 

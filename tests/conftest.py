@@ -10,15 +10,15 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 
-from smriti.models import (
+from smriti_memcore.models import (
     SmritiConfig, Memory, Episode, SalienceScore, MemorySource, Modality,
 )
-from smriti.vector_store import VectorStore
-from smriti.episode_buffer import EpisodeBuffer
-from smriti.palace import SemanticPalace
-from smriti.working_memory import WorkingMemory
-from smriti.llm_interface import LLMInterface, LLMResponse
-from smriti.metrics import SmritiMetrics
+from smriti_memcore.vector_store import VectorStore
+from smriti_memcore.episode_buffer import EpisodeBuffer
+from smriti_memcore.palace import SemanticPalace
+from smriti_memcore.working_memory import WorkingMemory
+from smriti_memcore.llm_interface import LLMInterface, LLMResponse
+from smriti_memcore.metrics import SmritiMetrics
 
 
 # ── Temp Directories ────────────────────────────────────

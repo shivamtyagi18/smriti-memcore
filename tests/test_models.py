@@ -4,7 +4,7 @@ import os
 import pytest
 from datetime import datetime, timedelta
 
-from smriti.models import (
+from smriti_memcore.models import (
     SmritiConfig, Memory, Episode, SalienceScore, MemorySource,
     MemoryStatus, Modality, ConfidenceLevel, DecisionType,
     ConsolidationDepth, MemoryTombstone, Skill,

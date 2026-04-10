@@ -1,7 +1,7 @@
 """Tests for smriti.episode_buffer — add, search, consolidation, persistence."""
 
 import pytest
-from smriti.models import Episode, SalienceScore, MemorySource
+from smriti_memcore.models import Episode, SalienceScore, MemorySource
 
 
 class TestAdd:
@@ -108,7 +108,7 @@ class TestPersistence:
     def test_episodes_survive_restart(self, tmp_dir, vector_store, make_episode):
         """Episodes should be loadable from SQLite after restart."""
         import os
-        from smriti.episode_buffer import EpisodeBuffer
+        from smriti_memcore.episode_buffer import EpisodeBuffer
 
         path = os.path.join(tmp_dir, "persist_eb")
 
