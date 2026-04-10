@@ -1,5 +1,5 @@
 """
-NEXUS v2 — Attention Gate.
+SMRITI v2 — Attention Gate.
 Multi-dimensional salience scoring with conflict detection on ingest.
 Inspired by the amygdala's role in emotional tagging of memories.
 """
@@ -9,10 +9,10 @@ from __future__ import annotations
 import logging
 from typing import Optional
 
-from nexus.models import (
-    Episode, Memory, MemorySource, NexusConfig, SalienceScore,
+from smriti.models import (
+    Episode, Memory, MemorySource, SmritiConfig, SalienceScore,
 )
-from nexus.llm_interface import LLMInterface
+from smriti.llm_interface import LLMInterface
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ class AttentionGate:
     - Low salience → discard
     """
 
-    def __init__(self, llm: LLMInterface, config: NexusConfig):
+    def __init__(self, llm: LLMInterface, config: SmritiConfig):
         self.llm = llm
         self.config = config
 

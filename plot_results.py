@@ -7,7 +7,7 @@ def main():
     if not os.path.exists("results/longmemeval_results.json"):
         # Create some mock data if the file doesn't exist yet (e.g., if ran on small limit)
         data = {
-            "summary": {"method": "NEXUS", "accuracy": 0.8, "latency": 0.98},
+            "summary": {"method": "SMRITI", "accuracy": 0.8, "latency": 0.98},
             "cases": []
         }
     else:
@@ -18,13 +18,13 @@ def main():
     baseline_acc = 1.0  # 1 out of 1
     baseline_lat = 11.98
     
-    nexus_acc = data["summary"]["accuracy"]
-    nexus_lat = data["summary"]["latency"]
+    smriti_acc = data["summary"]["accuracy"]
+    smriti_lat = data["summary"]["latency"]
     
     # 1. Accuracy Comparison Plot
     plt.figure(figsize=(10, 6))
-    methods = ['Baseline (Full Context)', 'NEXUS Dual-Process']
-    accuracies = [baseline_acc * 100, nexus_acc * 100]
+    methods = ['Baseline (Full Context)', 'SMRITI Dual-Process']
+    accuracies = [baseline_acc * 100, smriti_acc * 100]
     bars = plt.bar(methods, accuracies, color=['#FF9999', '#66B2FF'])
     
     plt.title('LongMemEval Accuracy (Subset)')
@@ -41,7 +41,7 @@ def main():
 
     # 2. Latency Comparison Plot
     plt.figure(figsize=(10, 6))
-    latencies = [baseline_lat, nexus_lat]
+    latencies = [baseline_lat, smriti_lat]
     bars = plt.bar(methods, latencies, color=['#FF9999', '#99FF99'])
     
     plt.title('Average Inquiry Latency (gpt-4o-mini)')

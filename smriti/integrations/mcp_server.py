@@ -1,14 +1,14 @@
 """
-NEXUS MCP Server.
-Exposes the NEXUS memory system as a Claude Code MCP server via stdio transport.
+SMRITI MCP Server.
+Exposes the SMRITI memory system as a Claude Code MCP server via stdio transport.
 
 Usage:
-    python -m nexus.integrations.mcp_server
+    python -m smriti.integrations.mcp_server
 
 Environment variables:
-    NEXUS_STORAGE_PATH   Where to persist data (default: ~/.nexus/global)
-    NEXUS_LLM_MODEL      LLM model name — provider inferred from prefix (default: mistral)
-    NEXUS_LLM_API_KEY    API key for cloud providers; empty for Ollama
+    SMRITI_STORAGE_PATH   Where to persist data (default: ~/.smriti/global)
+    SMRITI_LLM_MODEL      LLM model name — provider inferred from prefix (default: mistral)
+    SMRITI_LLM_API_KEY    API key for cloud providers; empty for Ollama
 """
 from __future__ import annotations
 
@@ -24,47 +24,47 @@ try:
     from mcp.server.fastmcp import FastMCP
 except ImportError:
     raise ImportError(
-        "To use the NEXUS MCP server, install the mcp extra:\n"
-        "pip install nexus-memory[mcp]"
+        "To use the SMRITI MCP server, install the mcp extra:\n"
+        "pip install smriti-memory[mcp]"
     )
 
-from nexus.core import NEXUS
-from nexus.models import (
+from smriti.core import SMRITI
+from smriti.models import (
     ConsolidationDepth,
     Memory,
     MemorySource,
     MemoryStatus,
     Modality,
-    NexusConfig,
+    SmritiConfig,
 )
 
 logger = logging.getLogger(__name__)
 
 # ── Startup Config ────────────────────────────────────────────────────────────
 
-def build_nexus_config() -> NexusConfig:
+def build_smriti_config() -> SmritiConfig:
     """
-    Build NexusConfig from environment variables.
+    Build SmritiConfig from environment variables.
 
-    NEXUS_STORAGE_PATH  — storage dir, ~ expanded (default: ~/.nexus/global)
-    NEXUS_LLM_MODEL     — model name, provider inferred by prefix (default: mistral)
-    NEXUS_LLM_API_KEY   — API key for cloud providers (default: "")
+    SMRITI_STORAGE_PATH  — storage dir, ~ expanded (default: ~/.smriti/global)
+    SMRITI_LLM_MODEL     — model name, provider inferred by prefix (default: mistral)
+    SMRITI_LLM_API_KEY   — API key for cloud providers (default: "")
     """
     storage_path = os.path.expanduser(
-        os.environ.get("NEXUS_STORAGE_PATH", "~/.nexus/global")
+        os.environ.get("SMRITI_STORAGE_PATH", "~/.smriti/global")
     )
-    llm_model = os.environ.get("NEXUS_LLM_MODEL", "mistral")
-    api_key = os.environ.get("NEXUS_LLM_API_KEY", "")
+    llm_model = os.environ.get("SMRITI_LLM_MODEL", "mistral")
+    api_key = os.environ.get("SMRITI_LLM_API_KEY", "")
 
     # Infer provider from model name prefix — matches LLMInterface routing in llm_interface.py:61-68
     # IMPORTANT: Pass "" (empty string, not None) for unused provider keys.
-    # NexusConfig.__post_init__ falls back to reading ANTHROPIC_API_KEY/OPENAI_API_KEY/GEMINI_API_KEY
+    # SmritiConfig.__post_init__ falls back to reading ANTHROPIC_API_KEY/OPENAI_API_KEY/GEMINI_API_KEY
     # env vars only when the field is None. Passing "" prevents that silent inheritance.
     anthropic_key = api_key if llm_model.startswith("claude") else ""
     openai_key = api_key if llm_model.startswith("gpt-") else ""
     gemini_key = api_key if llm_model.startswith("gemini") else ""
 
-    return NexusConfig(
+    return SmritiConfig(
         storage_path=storage_path,
         llm_model=llm_model,
         anthropic_api_key=anthropic_key,
@@ -73,11 +73,11 @@ def build_nexus_config() -> NexusConfig:
     )
 
 
-# Module-level NEXUS instance — initialized at startup, shared across tool calls.
-# Tests replace this: `import nexus.integrations.mcp_server as s; s._nexus = test_instance`
-_nexus: Optional[NEXUS] = None
+# Module-level SMRITI instance — initialized at startup, shared across tool calls.
+# Tests replace this: `import smriti.integrations.mcp_server as s; s._smriti = test_instance`
+_smriti: Optional[SMRITI] = None
 
-mcp_server = FastMCP("nexus-memory")
+mcp_server = FastMCP("smriti-memory")
 
 
 # ── Serialization ─────────────────────────────────────────────────────────────
@@ -104,13 +104,13 @@ def serialize_memory(memory: Memory) -> Dict[str, Any]:
 # ── Core Memory Tools ─────────────────────────────────────────────────────────
 
 @mcp_server.tool()
-def nexus_encode(
+def smriti_encode(
     content: str,
     source: str = "direct",
     modality: str = "text",
 ) -> Dict[str, Any]:
     """
-    Encode information into NEXUS long-term memory.
+    Encode information into SMRITI long-term memory.
 
     Returns the memory_id if stored, or {"memory_id": null, "status": "discarded"}
     if the Attention Gate determined the content has insufficient salience.
@@ -129,18 +129,18 @@ def nexus_encode(
         return {"error": f"Invalid modality '{modality}'. Use: text, code, image, structured"}
 
     try:
-        memory_id = _nexus.encode(content, source=mem_source, modality=mem_modality)
+        memory_id = _smriti.encode(content, source=mem_source, modality=mem_modality)
         if memory_id is None:
             return {"memory_id": None, "status": "discarded"}
-        _nexus.save()
+        _smriti.save()
         return {"memory_id": memory_id}
     except Exception as e:
-        logger.error(f"nexus_encode failed: {e}")
+        logger.error(f"smriti_encode failed: {e}")
         return {"error": str(e)}
 
 
 @mcp_server.tool()
-def nexus_recall(query: str, top_k: int = 10) -> List[Dict[str, Any]]:
+def smriti_recall(query: str, top_k: int = 10) -> List[Dict[str, Any]]:
     """
     Recall memories relevant to a query.
 
@@ -148,15 +148,15 @@ def nexus_recall(query: str, top_k: int = 10) -> List[Dict[str, Any]]:
     the recalled memories (testing effect). Returns empty list if nothing found.
     """
     try:
-        memories = _nexus.recall(query, top_k=top_k)
+        memories = _smriti.recall(query, top_k=top_k)
         return [serialize_memory(m) for m in memories]
     except Exception as e:
-        logger.error(f"nexus_recall failed: {e}")
+        logger.error(f"smriti_recall failed: {e}")
         return [{"error": str(e)}]
 
 
 @mcp_server.tool()
-def nexus_get_context() -> Dict[str, str]:
+def smriti_get_context() -> Dict[str, str]:
     """
     Get formatted working memory context for injection into a prompt.
 
@@ -164,16 +164,16 @@ def nexus_get_context() -> Dict[str, str]:
     formatted string ready to prepend to a system prompt or user message.
     """
     try:
-        return {"context": _nexus.get_context()}
+        return {"context": _smriti.get_context()}
     except Exception as e:
-        logger.error(f"nexus_get_context failed: {e}")
+        logger.error(f"smriti_get_context failed: {e}")
         return {"error": str(e)}
 
 
 # ── Confidence & Gap Tools ────────────────────────────────────────────────────
 
 @mcp_server.tool()
-def nexus_how_well_do_i_know(topic: str) -> Dict[str, Any]:
+def smriti_how_well_do_i_know(topic: str) -> Dict[str, Any]:
     """
     Assess confidence about a topic.
 
@@ -184,8 +184,8 @@ def nexus_how_well_do_i_know(topic: str) -> Dict[str, Any]:
     for the decision — these are separate MetaMemory methods.
     """
     try:
-        conf = _nexus.meta_memory.confidence_map(topic)
-        decision = _nexus.meta_memory.should_recall_or_ask(topic)
+        conf = _smriti.meta_memory.confidence_map(topic)
+        decision = _smriti.meta_memory.should_recall_or_ask(topic)
         return {
             "coverage": conf.coverage,
             "freshness": conf.freshness,
@@ -199,15 +199,15 @@ def nexus_how_well_do_i_know(topic: str) -> Dict[str, Any]:
 
 
 @mcp_server.tool()
-def nexus_knowledge_gaps() -> List[Dict[str, Any]]:
+def smriti_knowledge_gaps() -> List[Dict[str, Any]]:
     """
-    List topics NEXUS knows it doesn't know.
+    List topics SMRITI knows it doesn't know.
 
     Returns gap dicts with keys: topic, context, discovered_at (ISO string), resolved (bool).
     Gaps are registered when recall returns empty or confidence is below threshold.
     """
     try:
-        return _nexus.knowledge_gaps()
+        return _smriti.knowledge_gaps()
     except Exception as e:
         return [{"error": str(e)}]
 
@@ -215,7 +215,7 @@ def nexus_knowledge_gaps() -> List[Dict[str, Any]]:
 # ── Memory Management Tools ───────────────────────────────────────────────────
 
 @mcp_server.tool()
-def nexus_pin(memory_id: str) -> Dict[str, Any]:
+def smriti_pin(memory_id: str) -> Dict[str, Any]:
     """
     Mark a memory as permanent — it will never be decayed or forgotten.
 
@@ -223,12 +223,12 @@ def nexus_pin(memory_id: str) -> Dict[str, Any]:
     or {"error": ...} if the memory_id is not found.
     """
     try:
-        mem = _nexus.palace.get_memory(memory_id)
+        mem = _smriti.palace.get_memory(memory_id)
         if mem is None:
             return {"error": f"Memory not found: {memory_id}"}
-        _nexus.pin(memory_id)
+        _smriti.pin(memory_id)
         # Verify the pin actually took effect
-        mem = _nexus.palace.get_memory(memory_id)
+        mem = _smriti.palace.get_memory(memory_id)
         if mem is None or mem.status != MemoryStatus.PINNED:
             return {"error": f"Failed to pin memory: {memory_id}"}
         return {"status": "pinned", "memory_id": memory_id}
@@ -237,7 +237,7 @@ def nexus_pin(memory_id: str) -> Dict[str, Any]:
 
 
 @mcp_server.tool()
-def nexus_forget(memory_id: str) -> Dict[str, Any]:
+def smriti_forget(memory_id: str) -> Dict[str, Any]:
     """
     Gracefully forget a memory by archiving it.
 
@@ -246,17 +246,17 @@ def nexus_forget(memory_id: str) -> Dict[str, Any]:
     or {"error": ...} if the memory_id is not found.
     """
     try:
-        mem = _nexus.palace.get_memory(memory_id)
+        mem = _smriti.palace.get_memory(memory_id)
         if mem is None:
             return {"error": f"Memory not found: {memory_id}"}
-        _nexus.forget(memory_id)
+        _smriti.forget(memory_id)
         return {"status": "archived", "memory_id": memory_id}
     except Exception as e:
         return {"error": str(e)}
 
 
 @mcp_server.tool()
-def nexus_consolidate(depth: str = "light") -> Dict[str, Any]:
+def smriti_consolidate(depth: str = "light") -> Dict[str, Any]:
     """
     Run a consolidation cycle to organize and strengthen memories.
 
@@ -269,7 +269,7 @@ def nexus_consolidate(depth: str = "light") -> Dict[str, Any]:
     if depth not in ("light", "full"):
         return {"error": "depth must be 'light' or 'full'"}
     try:
-        result = _nexus.consolidate(depth=depth)
+        result = _smriti.consolidate(depth=depth)
 
         # Handle deferred (scheduler decided no consolidation needed)
         if result.get("status") == "deferred":
@@ -302,30 +302,30 @@ def nexus_consolidate(depth: str = "light") -> Dict[str, Any]:
 # ── Introspection Tools ───────────────────────────────────────────────────────
 
 @mcp_server.tool()
-def nexus_stats() -> Dict[str, Any]:
+def smriti_stats() -> Dict[str, Any]:
     """
-    Get comprehensive NEXUS system statistics.
+    Get comprehensive SMRITI system statistics.
 
     Returns a nested dict with 8 top-level keys:
     palace, working_memory, retrieval, consolidation, meta_memory,
     episode_buffer, vector_store, metrics.
     """
     try:
-        return _nexus.stats()
+        return _smriti.stats()
     except Exception as e:
         return {"error": str(e)}
 
 
 @mcp_server.tool()
-def nexus_get_suggestions() -> List[Dict[str, Any]]:
+def smriti_get_suggestions() -> List[Dict[str, Any]]:
     """
-    Get proactive suggestions from NEXUS's ambient monitor.
+    Get proactive suggestions from SMRITI's ambient monitor.
 
     Returns a list of memory dicts — patterns and insights surfaced from
     background consolidation that may be relevant to the current context.
     """
     try:
-        suggestions = _nexus.get_suggestions()
+        suggestions = _smriti.get_suggestions()
         return [serialize_memory(s) for s in suggestions]
     except Exception as e:
         return [{"error": str(e)}]
@@ -334,13 +334,13 @@ def nexus_get_suggestions() -> List[Dict[str, Any]]:
 # ── Startup ───────────────────────────────────────────────────────────────────
 
 def _startup():
-    """Initialize the module-level NEXUS instance from env vars."""
-    global _nexus
-    config = build_nexus_config()
-    logger.info(f"Starting NEXUS MCP server (storage: {config.storage_path}, model: {config.llm_model})")
-    _nexus = NEXUS(config=config)
-    atexit.register(_nexus.save)
-    logger.info("NEXUS MCP server ready — 10 tools registered")
+    """Initialize the module-level SMRITI instance from env vars."""
+    global _smriti
+    config = build_smriti_config()
+    logger.info(f"Starting SMRITI MCP server (storage: {config.storage_path}, model: {config.llm_model})")
+    _smriti = SMRITI(config=config)
+    atexit.register(_smriti.save)
+    logger.info("SMRITI MCP server ready — 10 tools registered")
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 """
-NEXUS v2 — Retrieval Engine.
+SMRITI v2 — Retrieval Engine.
 Multi-hop associative retrieval through the Semantic Palace with
 retrieval strengthening (testing effect) and effort-based desirable
 difficulty bonus.
@@ -15,10 +15,10 @@ from typing import Callable, Dict, List, Optional, Tuple
 
 import numpy as np
 
-from nexus.models import Memory, NexusConfig
-from nexus.palace import SemanticPalace
-from nexus.working_memory import WorkingMemory
-from nexus.vector_store import VectorStore
+from smriti.models import Memory, SmritiConfig
+from smriti.palace import SemanticPalace
+from smriti.working_memory import WorkingMemory
+from smriti.vector_store import VectorStore
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ class RetrievalEngine:
         palace: SemanticPalace,
         working_memory: WorkingMemory,
         vector_store: VectorStore,
-        config: NexusConfig,
+        config: SmritiConfig,
     ):
         self.palace = palace
         self.working_memory = working_memory

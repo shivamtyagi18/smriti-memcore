@@ -1,7 +1,7 @@
-"""Tests for nexus.episode_buffer — add, search, consolidation, persistence."""
+"""Tests for smriti.episode_buffer — add, search, consolidation, persistence."""
 
 import pytest
-from nexus.models import Episode, SalienceScore, MemorySource
+from smriti.models import Episode, SalienceScore, MemorySource
 
 
 class TestAdd:
@@ -108,7 +108,7 @@ class TestPersistence:
     def test_episodes_survive_restart(self, tmp_dir, vector_store, make_episode):
         """Episodes should be loadable from SQLite after restart."""
         import os
-        from nexus.episode_buffer import EpisodeBuffer
+        from smriti.episode_buffer import EpisodeBuffer
 
         path = os.path.join(tmp_dir, "persist_eb")
 

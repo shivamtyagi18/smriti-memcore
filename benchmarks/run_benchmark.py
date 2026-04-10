@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-NEXUS v2 Benchmark Runner
+SMRITI v2 Benchmark Runner
 Run: python benchmarks/run_benchmark.py --dataset locomo --output results/
 
 OpenAI:
@@ -26,15 +26,16 @@ except ImportError:
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from nexus.models import NexusConfig
-from nexus.llm_interface import LLMInterface
-from nexus.vector_store import VectorStore
+from smriti.models import SmritiConfig
+from smriti.llm_interface import LLMInterface
+from smriti.vector_store import VectorStore
 
 from baselines.naive_rag import NaiveRAG
 from baselines.full_context import FullContext
 from baselines.mem0_style import Mem0Style
 from baselines.memgpt_style import MemGPTStyle
-from baselines.nexus_adapter import NexusAdapter
+from baselines.smriti_adapter import SmritiAdapter
+from baselines.supermemory_adapter import SupermemoryAdapter
 
 from benchmarks.data_loaders import load_locomo, load_longmemeval
 from benchmarks.harness import BenchmarkHarness, print_comparison_table
@@ -54,9 +55,9 @@ def create_systems(llm: LLMInterface, selected: list) -> list:
     systems = []
 
     for name in selected:
-        if name == "nexus":
-            config = NexusConfig(storage_path="/tmp/nexus_bench")
-            systems.append(NexusAdapter(llm, config))
+        if name == "smriti":
+            config = SmritiConfig(storage_path="/tmp/smriti_bench")
+            systems.append(SmritiAdapter(llm, config))
 
         elif name == "naive_rag":
             vs = VectorStore()
@@ -73,14 +74,17 @@ def create_systems(llm: LLMInterface, selected: list) -> list:
             vs = VectorStore()
             systems.append(MemGPTStyle(llm, vs))
 
+        elif name == "supermemory":
+            systems.append(SupermemoryAdapter(llm_interface=llm))
+
     return systems
 
 
 def main():
-    parser = argparse.ArgumentParser(description="NEXUS v2 Benchmark Runner")
+    parser = argparse.ArgumentParser(description="SMRITI v2 Benchmark Runner")
     parser.add_argument(
         "--systems", type=str,
-        default="nexus,naive_rag,full_context,mem0,memgpt",
+        default="smriti,naive_rag,full_context,mem0,memgpt",
         help="Comma-separated list of systems to benchmark",
     )
     parser.add_argument(
@@ -124,7 +128,7 @@ def main():
     )
     parser.add_argument(
         "--consolidate", action="store_true",
-        help="Run NEXUS consolidation after ingest (tests the full pipeline)",
+        help="Run SMRITI consolidation after ingest (tests the full pipeline)",
     )
     parser.add_argument(
         "--verbose", "-v", action="store_true",
@@ -183,9 +187,9 @@ def main():
     # Print results
     print_comparison_table(report)
 
-    # Cleanup NEXUS temp data
-    if os.path.exists("/tmp/nexus_bench"):
-        shutil.rmtree("/tmp/nexus_bench", ignore_errors=True)
+    # Cleanup SMRITI temp data
+    if os.path.exists("/tmp/smriti_bench"):
+        shutil.rmtree("/tmp/smriti_bench", ignore_errors=True)
 
     print(f"\nDetailed results saved to: {args.output}/")
 

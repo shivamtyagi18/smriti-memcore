@@ -1,6 +1,6 @@
 """
-LangChain Memory Integration for NEXUS.
-Allows NEXUS to be used natively as a BaseChatMemory or BaseMemory component 
+LangChain Memory Integration for SMRITI.
+Allows SMRITI to be used natively as a BaseChatMemory or BaseMemory component 
 in any LangChain agent or chain.
 """
 
@@ -11,26 +11,26 @@ try:
     from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 except ImportError:
     raise ImportError(
-        "To use the NEXUS LangChain integration, you must install langchain-core:\n"
+        "To use the SMRITI LangChain integration, you must install langchain-core:\n"
         "pip install langchain-core"
     )
 
-from nexus.core import NEXUS
+from smriti.core import SMRITI
 
-class NexusLangChainHistory(BaseChatMessageHistory):
+class SmritiLangChainHistory(BaseChatMessageHistory):
     """
-    A LangChain message history backed by the NEXUS Dual-Process Architecture.
+    A LangChain message history backed by the SMRITI Dual-Process Architecture.
     
     This provides capacity-bounded working memory, semantic palace routing, 
     and asynchronous background consolidation, saving thousands of tokens 
     while improving factual recall accuracy.
     """
-    nexus_client: NEXUS
+    smriti_client: SMRITI
     session_id: str
     top_k: int = 5
     
-    def __init__(self, nexus_client: NEXUS, session_id: str = "default", top_k: int = 5):
-        self.nexus_client = nexus_client
+    def __init__(self, smriti_client: SMRITI, session_id: str = "default", top_k: int = 5):
+        self.smriti_client = smriti_client
         self.session_id = session_id
         self.top_k = top_k
         self._local_history: List[BaseMessage] = []
@@ -39,7 +39,7 @@ class NexusLangChainHistory(BaseChatMessageHistory):
     def messages(self) -> List[BaseMessage]:
         """
         Return the relevant history.
-        This queries the NEXUS semantic palace (System 2) AND episodic buffer (System 1) 
+        This queries the SMRITI semantic palace (System 2) AND episodic buffer (System 1) 
         using recent local history as context to achieve full Dual-Process memory.
         """
         if not self._local_history:
@@ -49,10 +49,10 @@ class NexusLangChainHistory(BaseChatMessageHistory):
         last_query = self._local_history[-1].content if self._local_history else "Hello"
         
         # System 2: Fetch abstract knowledge graph memories
-        memories = self.nexus_client.recall(str(last_query), top_k=self.top_k)
+        memories = self.smriti_client.recall(str(last_query), top_k=self.top_k)
         
         # System 1: Fetch exact raw episodic event logs
-        episodes = self.nexus_client.episode_buffer.search_semantic(str(last_query), top_k=self.top_k)
+        episodes = self.smriti_client.episode_buffer.search_semantic(str(last_query), top_k=self.top_k)
         
         # Format for the LLM prompt (Injecting Dual-Process Memory as System Context)
         context_blocks = []
@@ -70,15 +70,15 @@ class NexusLangChainHistory(BaseChatMessageHistory):
 
     def add_message(self, message: BaseMessage) -> None:
         """
-        Save a message to this conversation iteration and ingest into NEXUS.
+        Save a message to this conversation iteration and ingest into SMRITI.
         This feeds the Episode Buffer (System 1) instantly.
         """
         self._local_history.append(message)
         
-        # Ingest into NEXUS Long-Term Memory
+        # Ingest into SMRITI Long-Term Memory
         prefix = "Human: " if isinstance(message, HumanMessage) else "AI: "
-        self.nexus_client.encode(f"{prefix} {message.content}")
+        self.smriti_client.encode(f"{prefix} {message.content}")
 
     def clear(self) -> None:
-        """Clear the local session window. (Does not clear long-term archival NEXUS storage)."""
+        """Clear the local session window. (Does not clear long-term archival SMRITI storage)."""
         self._local_history = []

@@ -1,27 +1,27 @@
 #!/usr/bin/env bash
-# install_nexus_mcp.sh — Register the NEXUS MCP server with Claude Code
+# install_smriti_mcp.sh — Register the SMRITI MCP server with Claude Code
 #
 # Usage:
-#   bash install_nexus_mcp.sh
+#   bash install_smriti_mcp.sh
 #
 # What it does:
-#   1. Creates a dedicated venv at ~/.nexus/venv
-#   2. Installs nexus-memory[mcp] into it
-#   3. Patches ~/.claude.json to register the nexus MCP server
+#   1. Creates a dedicated venv at ~/.smriti/venv
+#   2. Installs smriti-memory[mcp] into it
+#   3. Patches ~/.claude.json to register the smriti MCP server
 #   4. Patches ~/.claude/settings.json to add recall/encode hooks
-#   5. Patches ~/.claude/CLAUDE.md with NEXUS memory instructions
+#   5. Patches ~/.claude/CLAUDE.md with SMRITI memory instructions
 #
 # Requirements: Python 3.9+, Claude Code
 
 set -euo pipefail
 
-VENV_DIR="$HOME/.nexus/venv"
+VENV_DIR="$HOME/.smriti/venv"
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
-info()    { echo "[nexus] $*"; }
-success() { echo "[nexus] ✓ $*"; }
-error()   { echo "[nexus] ✗ $*" >&2; exit 1; }
+info()    { echo "[smriti] $*"; }
+success() { echo "[smriti] ✓ $*"; }
+error()   { echo "[smriti] ✗ $*" >&2; exit 1; }
 
 # ── 1. Create dedicated venv ──────────────────────────────────────────────────
 
@@ -43,15 +43,15 @@ PYTHON="$VENV_DIR/bin/python3"
 
 # ── 2. Install package into venv ──────────────────────────────────────────────
 
-info "Installing nexus-memory[mcp]..."
-"$PYTHON" -m pip install "nexus-memory[mcp]" --quiet --upgrade
+info "Installing smriti-memory[mcp]..."
+"$PYTHON" -m pip install "smriti-memory[mcp]" --quiet --upgrade
 # Ensure mcp is installed even if the PyPI release pre-dates the extra
 "$PYTHON" -c "import mcp" 2>/dev/null || "$PYTHON" -m pip install "mcp>=1.0.0" --quiet
-success "nexus-memory[mcp] installed"
+success "smriti-memory[mcp] installed"
 
 # Verify imports
-"$PYTHON" -c "import nexus" 2>/dev/null \
-    || error "nexus not importable after install — check pip output above."
+"$PYTHON" -c "import smriti" 2>/dev/null \
+    || error "smriti not importable after install — check pip output above."
 "$PYTHON" -c "import mcp" 2>/dev/null \
     || error "mcp not importable after install — check pip output above."
 
@@ -60,7 +60,7 @@ success "Using Python: $PYTHON"
 # ── 3. Prompt for LLM config ──────────────────────────────────────────────────
 
 echo ""
-echo "Which LLM should NEXUS use for memory consolidation?"
+echo "Which LLM should SMRITI use for memory consolidation?"
 echo "  1) mistral (local Ollama — default, no API key needed)"
 echo "  2) claude-haiku-4-5-20251001 (Anthropic API key required)"
 echo "  3) gpt-4o-mini (OpenAI API key required)"
@@ -96,7 +96,7 @@ print('\n'.join(names))
                     LLM_MODEL="$FIRST_MODEL"
                     success "Using Ollama model: $LLM_MODEL"
                 else
-                    warn "Proceeding with '$LLM_MODEL' — run 'ollama pull $LLM_MODEL' before using NEXUS consolidation."
+                    warn "Proceeding with '$LLM_MODEL' — run 'ollama pull $LLM_MODEL' before using SMRITI consolidation."
                 fi
             else
                 success "Ollama model '$LLM_MODEL' is available."
@@ -108,12 +108,12 @@ print('\n'.join(names))
     fi
 fi
 
-read -rp "Memory storage path [~/.nexus/global]: " STORAGE_PATH
-STORAGE_PATH="${STORAGE_PATH:-~/.nexus/global}"
+read -rp "Memory storage path [~/.smriti/global]: " STORAGE_PATH
+STORAGE_PATH="${STORAGE_PATH:-~/.smriti/global}"
 
 # ── 4. Patch ~/.claude.json ───────────────────────────────────────────────────
 
-info "Registering nexus MCP server in ~/.claude.json..."
+info "Registering smriti MCP server in ~/.claude.json..."
 
 "$PYTHON" - <<PYEOF
 import json, os
@@ -129,21 +129,21 @@ else:
 if "mcpServers" not in config:
     config["mcpServers"] = {}
 
-config["mcpServers"]["nexus"] = {
+config["mcpServers"]["smriti"] = {
     "command": "$PYTHON",
-    "args": ["-m", "nexus.integrations.mcp_server"],
+    "args": ["-m", "smriti.integrations.mcp_server"],
     "env": {
         "PYTHONPATH": "",
-        "NEXUS_STORAGE_PATH": "$STORAGE_PATH",
-        "NEXUS_LLM_MODEL": "$LLM_MODEL",
-        "NEXUS_LLM_API_KEY": "$LLM_API_KEY",
+        "SMRITI_STORAGE_PATH": "$STORAGE_PATH",
+        "SMRITI_LLM_MODEL": "$LLM_MODEL",
+        "SMRITI_LLM_API_KEY": "$LLM_API_KEY",
     },
 }
 
 with open(claude_json, "w") as f:
     json.dump(config, f, indent=2)
 
-print(f"[nexus] ✓ Written to {claude_json}")
+print(f"[smriti] ✓ Written to {claude_json}")
 PYEOF
 
 # ── 5. Smoke test ─────────────────────────────────────────────────────────────
@@ -151,23 +151,23 @@ PYEOF
 info "Verifying server starts..."
 if "$PYTHON" -c "
 import os
-os.environ['NEXUS_STORAGE_PATH'] = '/tmp/nexus_install_test'
-os.environ['NEXUS_LLM_MODEL'] = '$LLM_MODEL'
-os.environ['NEXUS_LLM_API_KEY'] = '$LLM_API_KEY'
-from nexus.integrations.mcp_server import build_nexus_config
-cfg = build_nexus_config()
+os.environ['SMRITI_STORAGE_PATH'] = '/tmp/smriti_install_test'
+os.environ['SMRITI_LLM_MODEL'] = '$LLM_MODEL'
+os.environ['SMRITI_LLM_API_KEY'] = '$LLM_API_KEY'
+from smriti.integrations.mcp_server import build_smriti_config
+cfg = build_smriti_config()
 assert cfg.llm_model == '$LLM_MODEL'
 print('ok')
 " 2>/dev/null | grep -q ok; then
     success "Server verified"
 else
-    echo "[nexus] ⚠ Could not verify server — check your LLM config after launch"
+    echo "[smriti] ⚠ Could not verify server — check your LLM config after launch"
 fi
 
 # ── 6. Patch ~/.claude/settings.json with hooks ───────────────────────────────
 
 echo ""
-echo "NEXUS can configure automatic memory hooks in ~/.claude/settings.json"
+echo "SMRITI can configure automatic memory hooks in ~/.claude/settings.json"
 echo "so Claude recalls memories on every message and encodes takeaways at session end."
 echo "This modifies your global Claude Code settings (affects all projects)."
 echo ""
@@ -192,13 +192,13 @@ else:
 if "hooks" not in settings:
     settings["hooks"] = {}
 
-# UserPromptSubmit — inject nexus_recall reminder into Claude's context
-nexus_prompt_group = {
+# UserPromptSubmit — inject smriti_recall reminder into Claude's context
+smriti_prompt_group = {
     "matcher": "",
     "hooks": [{
         "type": "command",
-        "command": "echo '{\"hookSpecificOutput\": {\"hookEventName\": \"UserPromptSubmit\", \"additionalContext\": \"NEXUS MEMORY PROTOCOL: (1) BEFORE responding: call nexus_recall with 2-3 keywords from the user message. (2) AFTER responding: call nexus_encode for any of these that occurred this turn: user stated a preference or fact, a decision was made, a problem was solved, a key design choice was finalized, or new project context was revealed. Do not skip nexus_encode when these conditions are met.\"}}'",
-        "statusMessage": "Loading NEXUS memories..."
+        "command": "echo '{\"hookSpecificOutput\": {\"hookEventName\": \"UserPromptSubmit\", \"additionalContext\": \"SMRITI MEMORY PROTOCOL: (1) BEFORE responding: call smriti_recall with 2-3 keywords from the user message. (2) AFTER responding: call smriti_encode for any of these that occurred this turn: user stated a preference or fact, a decision was made, a problem was solved, a key design choice was finalized, or new project context was revealed. Do not skip smriti_encode when these conditions are met.\"}}'",
+        "statusMessage": "Loading SMRITI memories..."
     }]
 }
 
@@ -210,16 +210,16 @@ existing_cmds = []
 for group in settings["hooks"]["UserPromptSubmit"]:
     for h in group.get("hooks", []):
         existing_cmds.append(h.get("command", ""))
-if not any("nexus_recall" in cmd for cmd in existing_cmds):
-    settings["hooks"]["UserPromptSubmit"].append(nexus_prompt_group)
+if not any("smriti_recall" in cmd for cmd in existing_cmds):
+    settings["hooks"]["UserPromptSubmit"].append(smriti_prompt_group)
 
 # SessionStart — load working memory for the current project directory
-nexus_session_group = {
+smriti_session_group = {
     "matcher": "",
     "hooks": [{
         "type": "command",
-        "command": r"""bash -c 'echo "{\"systemMessage\": \"NEXUS MEMORY: Session starting in $(pwd). Call nexus_get_context to load working memory for this project, then nexus_recall with the project name and relevant keywords.\"}"'""",
-        "statusMessage": "Loading NEXUS context..."
+        "command": r"""bash -c 'echo "{\"systemMessage\": \"SMRITI MEMORY: Session starting in $(pwd). Call smriti_get_context to load working memory for this project, then smriti_recall with the project name and relevant keywords.\"}"'""",
+        "statusMessage": "Loading SMRITI context..."
     }]
 }
 
@@ -230,16 +230,16 @@ existing_session_cmds = []
 for group in settings["hooks"]["SessionStart"]:
     for h in group.get("hooks", []):
         existing_session_cmds.append(h.get("command", ""))
-if not any("nexus_get_context" in cmd for cmd in existing_session_cmds):
-    settings["hooks"]["SessionStart"].append(nexus_session_group)
+if not any("smriti_get_context" in cmd for cmd in existing_session_cmds):
+    settings["hooks"]["SessionStart"].append(smriti_session_group)
 
 # Stop — remind Claude to encode takeaways
-nexus_stop_group = {
+smriti_stop_group = {
     "matcher": "",
     "hooks": [{
         "type": "command",
-        "command": "echo '{\"systemMessage\": \"NEXUS: Remember to call nexus_encode to store key facts, decisions, and context from this session before ending.\"}'",
-        "statusMessage": "Saving NEXUS memory..."
+        "command": "echo '{\"systemMessage\": \"SMRITI: Remember to call smriti_encode to store key facts, decisions, and context from this session before ending.\"}'",
+        "statusMessage": "Saving SMRITI memory..."
     }]
 }
 
@@ -250,28 +250,28 @@ existing_stop_cmds = []
 for group in settings["hooks"]["Stop"]:
     for h in group.get("hooks", []):
         existing_stop_cmds.append(h.get("command", ""))
-if not any("nexus_encode" in cmd for cmd in existing_stop_cmds):
-    settings["hooks"]["Stop"].append(nexus_stop_group)
+if not any("smriti_encode" in cmd for cmd in existing_stop_cmds):
+    settings["hooks"]["Stop"].append(smriti_stop_group)
 
 with open(settings_path, "w") as f:
     json.dump(settings, f, indent=2)
 
-print(f"[nexus] ✓ Hooks written to {settings_path}")
+print(f"[smriti] ✓ Hooks written to {settings_path}")
 PYEOF
 
-# ── 7. Patch ~/.claude/CLAUDE.md with NEXUS memory instructions ───────────────
+# ── 7. Patch ~/.claude/CLAUDE.md with SMRITI memory instructions ───────────────
 
-info "Adding NEXUS memory instructions to ~/.claude/CLAUDE.md..."
+info "Adding SMRITI memory instructions to ~/.claude/CLAUDE.md..."
 
 CLAUDE_MD="$HOME/.claude/CLAUDE.md"
-NEXUS_SECTION="
-## NEXUS Memory
+SMRITI_SECTION="
+## SMRITI Memory
 
-Use the nexus MCP tools to maintain memory across sessions.
+Use the smriti MCP tools to maintain memory across sessions.
 
-**On every user message:** Call \`nexus_recall\` with 2-3 keywords before responding.
+**On every user message:** Call \`smriti_recall\` with 2-3 keywords before responding.
 
-**Call \`nexus_encode\` immediately when any of these occur:**
+**Call \`smriti_encode\` immediately when any of these occur:**
 - User states a preference, constraint, or personal fact (\"I prefer...\", \"we always...\", \"don't do X\")
 - A technical decision is finalized (architecture choice, library selection, approach chosen)
 - A bug root cause is identified or a problem is solved
@@ -280,17 +280,17 @@ Use the nexus MCP tools to maintain memory across sessions.
 
 **Do not wait until end of session** — encode facts as they emerge, mid-conversation.
 
-**At session end:** Call \`nexus_encode\` with a summary of key takeaways not yet encoded."
+**At session end:** Call \`smriti_encode\` with a summary of key takeaways not yet encoded."
 
 if [[ ! -f "$CLAUDE_MD" ]]; then
     echo "# Global Claude Instructions" > "$CLAUDE_MD"
 fi
 
-if ! grep -q "NEXUS Memory" "$CLAUDE_MD" 2>/dev/null; then
-    echo "$NEXUS_SECTION" >> "$CLAUDE_MD"
-    success "NEXUS instructions added to $CLAUDE_MD"
+if ! grep -q "SMRITI Memory" "$CLAUDE_MD" 2>/dev/null; then
+    echo "$SMRITI_SECTION" >> "$CLAUDE_MD"
+    success "SMRITI instructions added to $CLAUDE_MD"
 else
-    info "NEXUS instructions already present in $CLAUDE_MD — skipping"
+    info "SMRITI instructions already present in $CLAUDE_MD — skipping"
 fi
 
 else
@@ -301,7 +301,7 @@ fi
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo " NEXUS MCP server registered successfully!"
+echo " SMRITI MCP server registered successfully!"
 echo " Restart Claude Code to activate it."
 echo " Then run /mcp to confirm it appears."
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

@@ -1,4 +1,4 @@
-# 🧬 NEXUS v2: Neuro-Inspired EXperience-Unified System
+# 🧬 SMRITI v2: Neuro-Inspired EXperience-Unified System
 ## A Novel Memory Architecture for AI Agents — Inspired by Human Cognition
 
 > *"The best bio-inspired AI doesn't copy biology — it understands why a biological mechanism works and implements the computational principle, adapting it to the medium. Wings don't flap; airplanes generate lift differently."*
@@ -9,7 +9,7 @@
 
 Current AI memory systems (MemGPT, Generative Agents, Mem0, etc.) borrow heavily from **computer science metaphors** — RAM vs. disk, databases, key-value stores. They work, but they miss the deeper principles that make human memory extraordinary.
 
-NEXUS transplants the *computational principles* behind human memory champion techniques into AI agent memory design. Not surface-level analogies — not simulating spatial navigation or circadian rhythms — but the **underlying mechanisms** that make those techniques work, adapted for the computational medium.
+SMRITI transplants the *computational principles* behind human memory champion techniques into AI agent memory design. Not surface-level analogies — not simulating spatial navigation or circadian rhythms — but the **underlying mechanisms** that make those techniques work, adapted for the computational medium.
 
 ---
 
@@ -33,7 +33,7 @@ From our [human memory research](file:///Users/shivtatva/HomeProjects/Memory/sha
 
 ```
 ╔══════════════════════════════════════════════════════════════════════════╗
-║                     NEXUS v2 ARCHITECTURE                               ║
+║                     SMRITI v2 ARCHITECTURE                               ║
 ╠══════════════════════════════════════════════════════════════════════════╣
 ║                                                                          ║
 ║  ┌──────────────────────────────────────────────────────────────────┐    ║
@@ -116,7 +116,7 @@ From our [human memory research](file:///Users/shivtatva/HomeProjects/Memory/sha
 
 **What current systems lack:** Most systems treat all incoming information equally. Generative Agents score importance, but only on a 1-10 scale with no context.
 
-**NEXUS approach — Multi-dimensional salience scoring:**
+**SMRITI approach — Multi-dimensional salience scoring:**
 
 ```python
 class SalienceScore:
@@ -148,7 +148,7 @@ class SalienceScore:
 > [!IMPORTANT]
 > The reason the Memory Palace works for humans is that we have evolved hippocampal place cells and grid cells — specialized spatial navigation hardware. AI agents have no such hardware. A graph labeled with "rooms" is just a graph. The real value of the Memory Palace for AI is **contextual priming** (activating one topic pre-loads related concepts) and **multi-hop associative retrieval** (following typed edges to surface memories that pure vector search would miss).
 
-**NEXUS approach — Hierarchical semantic clustering with typed associations:**
+**SMRITI approach — Hierarchical semantic clustering with typed associations:**
 
 ```
 The Semantic Palace is a navigable graph where:
@@ -273,7 +273,7 @@ class AmbientMonitor:
 
 **What current systems lack:** No existing AI memory system has a background consolidation process. Memories are stored and retrieved — there's no mechanism for reorganizing, strengthening, or pruning them. This is the biggest gap.
 
-**NEXUS uses 8 background processes, triggered adaptively (not by clock time):**
+**SMRITI uses 8 background processes, triggered adaptively (not by clock time):**
 
 **Scheduling — Event-driven, not time-based:**
 
@@ -299,7 +299,7 @@ class AdaptiveConsolidationScheduler:
 #### Process 1: Spaced Repetition Scheduler (Utility-Based)
 
 > [!NOTE]
-> Human spaced repetition uses temporal intervals (1 day, 3 days, 7 days) because human forgetting is time-based. AI memory doesn't degrade temporally — it loses **relevance** as context shifts and **utility** as access patterns change. NEXUS uses utility-based decay instead.
+> Human spaced repetition uses temporal intervals (1 day, 3 days, 7 days) because human forgetting is time-based. AI memory doesn't degrade temporally — it loses **relevance** as context shifts and **utility** as access patterns change. SMRITI uses utility-based decay instead.
 
 ```python
 class UtilityBasedRepetition:
@@ -459,7 +459,7 @@ class ConflictResolver:
 ```
 
 > [!NOTE]
-> This is where NEXUS deliberately **improves on** human cognition rather than imitating it. Humans are notoriously bad at updating old beliefs — we suffer from anchoring bias and belief perseverance. AI memory should do better by actively detecting and resolving contradictions.
+> This is where SMRITI deliberately **improves on** human cognition rather than imitating it. Humans are notoriously bad at updating old beliefs — we suffer from anchoring bias and belief perseverance. AI memory should do better by actively detecting and resolving contradictions.
 
 #### Process 8: Palace Defragmenter *(NEW in v2)*
 
@@ -498,7 +498,7 @@ class PalaceDefragmenter:
 **Inspired by:** Retrieval practice / the testing effect
 **Mechanism captured:** The act of recall strengthens the memory + "desirable difficulty"
 
-**What current systems lack:** In every existing system, retrieval is a passive read. NEXUS makes retrieval a **write operation** — every recall simultaneously strengthens the retrieved memory.
+**What current systems lack:** In every existing system, retrieval is a passive read. SMRITI makes retrieval a **write operation** — every recall simultaneously strengthens the retrieved memory.
 
 ```python
 def retrieve(query: str, context: Context) -> List[Memory]:
@@ -561,7 +561,7 @@ def retrieve(query: str, context: Context) -> List[Memory]:
 ### 6. 📝 Episode Buffer — *"The Diary"*
 **Inspired by:** Episodic memory, memory streams, Reflexion's self-reflection buffer
 
-| Feature | Generative Agents | Reflexion | Mem0 | NEXUS v2 |
+| Feature | Generative Agents | Reflexion | Mem0 | SMRITI v2 |
 |---------|------------------|-----------|------|----------|
 | Raw event logging | ✅ | ❌ | ✅ | ✅ |
 | Importance scoring | ✅ (1-10) | ❌ | ❌ | ✅ (5D + learned) |
@@ -688,7 +688,7 @@ class SalienceWeightLearner:
 
 ## Data Flow Example
 
-A complete lifecycle of a memory through NEXUS v2:
+A complete lifecycle of a memory through SMRITI v2:
 
 ```
      User says: "Always use gzip compression for API responses over 1KB"
@@ -796,44 +796,44 @@ A complete lifecycle of a memory through NEXUS v2:
 ### API Surface
 
 ```python
-nexus = NEXUS(config)
+smriti = SMRITI(config)
 
 # ── Core Operations ──
-nexus.encode(content, context, modality='text')  # Salience scoring + palace placement
-memories = nexus.recall(query, context)           # Navigate + retrieve + strengthen
-confidence = nexus.how_well_do_i_know(topic)      # Meta-memory confidence check
+smriti.encode(content, context, modality='text')  # Salience scoring + palace placement
+memories = smriti.recall(query, context)           # Navigate + retrieve + strengthen
+confidence = smriti.how_well_do_i_know(topic)      # Meta-memory confidence check
 
 # ── Consolidation ──
-nexus.consolidate(depth='auto')     # Trigger with adaptive depth
-nexus.reflect()                     # Force reflection cycle
-nexus.defragment()                  # Palace maintenance
+smriti.consolidate(depth='auto')     # Trigger with adaptive depth
+smriti.reflect()                     # Force reflection cycle
+smriti.defragment()                  # Palace maintenance
 
 # ── Memory Management ──
-nexus.pin(memory_id)                # Mark as never-forget
-nexus.forget(memory_id)             # Explicit removal
-nexus.resolve_conflict(mem_a, mem_b, strategy='temporal')
+smriti.pin(memory_id)                # Mark as never-forget
+smriti.forget(memory_id)             # Explicit removal
+smriti.resolve_conflict(mem_a, mem_b, strategy='temporal')
 
 # ── Palace Organization ──
-nexus.palace.create_room(topic)
-nexus.palace.link_rooms(a, b, relationship='causal')
-nexus.palace.visualize()            # Render graph topology
-nexus.palace.health()               # Connectivity, fragmentation metrics
+smriti.palace.create_room(topic)
+smriti.palace.link_rooms(a, b, relationship='causal')
+smriti.palace.visualize()            # Render graph topology
+smriti.palace.health()               # Connectivity, fragmentation metrics
 
 # ── Multi-Agent ──
-nexus.publish(memory, scope='team')
-nexus.subscribe(topics=['backend', 'security'])
+smriti.publish(memory, scope='team')
+smriti.subscribe(topics=['backend', 'security'])
 
 # ── Inspection ──
-nexus.stats()                       # Memory count, health, decay rates
-nexus.knowledge_gaps()              # What the agent knows it doesn't know
-nexus.eviction_history()            # What was pushed out of working memory
+smriti.stats()                       # Memory count, health, decay rates
+smriti.knowledge_gaps()              # What the agent knows it doesn't know
+smriti.eviction_history()            # What was pushed out of working memory
 ```
 
 ---
 
-## How NEXUS v2 Differs From Everything Else
+## How SMRITI v2 Differs From Everything Else
 
-| Existing Systems | NEXUS v2 |
+| Existing Systems | SMRITI v2 |
 |-----------------|----------|
 | Memory as **storage** | Memory as a **living system** that evolves |
 | Flat vector retrieval | Multi-hop associative retrieval via typed hallways |
@@ -853,7 +853,7 @@ nexus.eviction_history()            # What was pushed out of working memory
 
 ## Summary
 
-| Human Technique | Underlying Mechanism | NEXUS v2 Component |
+| Human Technique | Underlying Mechanism | SMRITI v2 Component |
 |----------------|---------------------|-------------------|
 | Memory Palace | Contextual priming + associative traversal | Semantic Palace with typed hallways |
 | Spaced Repetition | Utility-driven reinforcement | Consolidation Engine (utility-based, not temporal) |
@@ -878,4 +878,4 @@ The result: an AI agent that doesn't just *store* memories — it **cultivates**
 
 ---
 
-*Derived from synthesis of: [Human Memory Techniques](file:///Users/shivtatva/HomeProjects/Memory/sharp_memory_techniques.md) • [ZVec & MIRA Research](file:///Users/shivtatva/HomeProjects/Memory/zvec_and_mira_research.md) • [AI Agent Memory Landscape](file:///Users/shivtatva/HomeProjects/Memory/ai_agent_memory_systems.md) • [Expert Review](file:///Users/shivtatva/HomeProjects/Memory/nexus_v2_expert_review.md)*
+*Derived from synthesis of: [Human Memory Techniques](file:///Users/shivtatva/HomeProjects/Memory/sharp_memory_techniques.md) • [ZVec & MIRA Research](file:///Users/shivtatva/HomeProjects/Memory/zvec_and_mira_research.md) • [AI Agent Memory Landscape](file:///Users/shivtatva/HomeProjects/Memory/ai_agent_memory_systems.md) • [Expert Review](file:///Users/shivtatva/HomeProjects/Memory/smriti_v2_expert_review.md)*

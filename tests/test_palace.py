@@ -1,10 +1,10 @@
-"""Tests for nexus.palace — rooms, memory placement, persistence, thread safety."""
+"""Tests for smriti.palace — rooms, memory placement, persistence, thread safety."""
 
 import os
 import threading
 import pytest
-from nexus.models import Memory, SalienceScore, MemorySource, MemoryStatus
-from nexus.palace import SemanticPalace
+from smriti.models import Memory, SalienceScore, MemorySource, MemoryStatus
+from smriti.palace import SemanticPalace
 
 
 class TestRoomCreation:

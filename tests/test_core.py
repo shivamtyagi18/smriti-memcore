@@ -1,18 +1,18 @@
-"""Tests for nexus.core — end-to-end encode/recall, context manager, metrics."""
+"""Tests for smriti.core — end-to-end encode/recall, context manager, metrics."""
 
 import os
 import pytest
 import threading
 
-from nexus.models import NexusConfig, MemorySource
-from nexus import NEXUS, NexusMetrics
+from smriti.models import SmritiConfig, MemorySource
+from smriti import SMRITI, SmritiMetrics
 
 
 @pytest.fixture
-def nexus(tmp_dir, mock_llm):
-    """NEXUS instance with mock LLM for testing (no real API calls)."""
-    config = NexusConfig(storage_path=os.path.join(tmp_dir, "nexus_db"))
-    n = NEXUS(config=config)
+def smriti(tmp_dir, mock_llm):
+    """SMRITI instance with mock LLM for testing (no real API calls)."""
+    config = SmritiConfig(storage_path=os.path.join(tmp_dir, "smriti_db"))
+    n = SMRITI(config=config)
     # Replace LLM with mock to avoid real API calls
     n.llm = mock_llm
     n.attention_gate.llm = mock_llm
@@ -22,60 +22,60 @@ def nexus(tmp_dir, mock_llm):
 
 
 class TestEncode:
-    def test_encode_returns_id(self, nexus):
-        mid = nexus.encode("Python is a programming language", use_llm=True)
+    def test_encode_returns_id(self, smriti):
+        mid = smriti.encode("Python is a programming language", use_llm=True)
         assert mid is not None
 
-    def test_encode_empty_rejected(self, nexus):
-        mid = nexus.encode("")
+    def test_encode_empty_rejected(self, smriti):
+        mid = smriti.encode("")
         assert mid is None
 
-    def test_encode_whitespace_rejected(self, nexus):
-        mid = nexus.encode("   ")
+    def test_encode_whitespace_rejected(self, smriti):
+        mid = smriti.encode("   ")
         assert mid is None
 
-    def test_encode_truncates_long_content(self, nexus):
+    def test_encode_truncates_long_content(self, smriti):
         long_content = "x" * 200000
-        mid = nexus.encode(long_content, use_llm=False)
+        mid = smriti.encode(long_content, use_llm=False)
         # Should not crash, content should be truncated
         if mid:
-            mem = nexus.palace.get_memory(mid)
-            assert len(mem.content) <= nexus.config.max_content_length
+            mem = smriti.palace.get_memory(mid)
+            assert len(mem.content) <= smriti.config.max_content_length
 
 
 class TestRecall:
-    def test_recall_after_encode(self, nexus):
-        nexus.encode("cats are furry domesticated animals", use_llm=True)
-        results = nexus.recall("what are cats?")
+    def test_recall_after_encode(self, smriti):
+        smriti.encode("cats are furry domesticated animals", use_llm=True)
+        results = smriti.recall("what are cats?")
         assert len(results) > 0
 
-    def test_recall_empty_returns_nothing(self, nexus):
-        results = nexus.recall("nonexistent topic")
+    def test_recall_empty_returns_nothing(self, smriti):
+        results = smriti.recall("nonexistent topic")
         assert results == []
 
 
 class TestMetrics:
-    def test_encode_tracked(self, nexus):
-        nexus.encode("trackable memory", use_llm=True)
-        metrics = nexus.get_metrics()
+    def test_encode_tracked(self, smriti):
+        smriti.encode("trackable memory", use_llm=True)
+        metrics = smriti.get_metrics()
         assert metrics["operations"]["encode"]["total"] >= 1
 
-    def test_recall_tracked(self, nexus):
-        nexus.encode("test", use_llm=True)
-        nexus.recall("test")
-        metrics = nexus.get_metrics()
+    def test_recall_tracked(self, smriti):
+        smriti.encode("test", use_llm=True)
+        smriti.recall("test")
+        metrics = smriti.get_metrics()
         assert metrics["operations"]["recall"]["total"] >= 1
 
-    def test_prometheus_format(self, nexus):
-        nexus.encode("test", use_llm=True)
-        text = nexus.get_metrics_prometheus()
-        assert "nexus_encode_total" in text
+    def test_prometheus_format(self, smriti):
+        smriti.encode("test", use_llm=True)
+        text = smriti.get_metrics_prometheus()
+        assert "smriti_encode_total" in text
 
 
 class TestContextManager:
     def test_context_manager(self, tmp_dir, mock_llm):
-        config = NexusConfig(storage_path=os.path.join(tmp_dir, "cm_test"))
-        with NEXUS(config=config) as n:
+        config = SmritiConfig(storage_path=os.path.join(tmp_dir, "cm_test"))
+        with SMRITI(config=config) as n:
             n.llm = mock_llm
             n.attention_gate.llm = mock_llm
             n.encode("inside context manager", use_llm=True)
@@ -83,20 +83,20 @@ class TestContextManager:
 
 
 class TestClose:
-    def test_close_saves_state(self, nexus):
-        nexus.encode("save me", use_llm=True)
-        nexus.close()
+    def test_close_saves_state(self, smriti):
+        smriti.encode("save me", use_llm=True)
+        smriti.close()
         # Should not crash on double close
-        nexus.close()
+        smriti.close()
 
 
 class TestConcurrency:
-    def test_concurrent_encode(self, nexus):
+    def test_concurrent_encode(self, smriti):
         errors = []
 
         def encode(i):
             try:
-                nexus.encode(f"concurrent fact number {i}", use_llm=True)
+                smriti.encode(f"concurrent fact number {i}", use_llm=True)
             except Exception as e:
                 errors.append(e)
 

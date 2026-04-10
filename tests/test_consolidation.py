@@ -1,19 +1,19 @@
-"""Tests for nexus.consolidation — scheduling, forgetting, conflict resolution."""
+"""Tests for smriti.consolidation — scheduling, forgetting, conflict resolution."""
 
 import pytest
 from collections import deque
 from datetime import datetime, timedelta
 
-from nexus.models import (
-    NexusConfig, Memory, MemorySource, MemoryStatus,
+from smriti.models import (
+    SmritiConfig, Memory, MemorySource, MemoryStatus,
     ConsolidationDepth, SalienceScore,
 )
-from nexus.consolidation import ConsolidationEngine
+from smriti.consolidation import ConsolidationEngine
 
 
 class TestScheduler:
     def test_defer_when_empty(self, episode_buffer, palace, vector_store, mock_llm):
-        config = NexusConfig()
+        config = SmritiConfig()
         engine = ConsolidationEngine(
             episode_buffer=episode_buffer, palace=palace,
             vector_store=vector_store, llm=mock_llm, config=config,
@@ -21,7 +21,7 @@ class TestScheduler:
         assert engine.should_consolidate() == ConsolidationDepth.DEFER
 
     def test_light_on_buffer_threshold(self, episode_buffer, palace, vector_store, mock_llm, make_episode):
-        config = NexusConfig(episode_buffer_trigger=5)
+        config = SmritiConfig(episode_buffer_trigger=5)
         engine = ConsolidationEngine(
             episode_buffer=episode_buffer, palace=palace,
             vector_store=vector_store, llm=mock_llm, config=config,
@@ -31,7 +31,7 @@ class TestScheduler:
         assert engine.should_consolidate() == ConsolidationDepth.LIGHT
 
     def test_full_on_large_backlog(self, episode_buffer, palace, vector_store, mock_llm, make_episode):
-        config = NexusConfig(episode_buffer_trigger=5)
+        config = SmritiConfig(episode_buffer_trigger=5)
         engine = ConsolidationEngine(
             episode_buffer=episode_buffer, palace=palace,
             vector_store=vector_store, llm=mock_llm, config=config,
@@ -43,7 +43,7 @@ class TestScheduler:
 
 class TestForgetting:
     def test_user_stated_never_forgotten(self, episode_buffer, palace, vector_store, mock_llm):
-        config = NexusConfig()
+        config = SmritiConfig()
         engine = ConsolidationEngine(
             episode_buffer=episode_buffer, palace=palace,
             vector_store=vector_store, llm=mock_llm, config=config,
@@ -60,7 +60,7 @@ class TestForgetting:
         assert m.status == MemoryStatus.ACTIVE
 
     def test_pinned_never_forgotten(self, episode_buffer, palace, vector_store, mock_llm):
-        config = NexusConfig()
+        config = SmritiConfig()
         engine = ConsolidationEngine(
             episode_buffer=episode_buffer, palace=palace,
             vector_store=vector_store, llm=mock_llm, config=config,
@@ -76,7 +76,7 @@ class TestForgetting:
 
 class TestConflictResolution:
     def test_confidence_capped(self, episode_buffer, palace, vector_store, mock_llm):
-        config = NexusConfig()
+        config = SmritiConfig()
         engine = ConsolidationEngine(
             episode_buffer=episode_buffer, palace=palace,
             vector_store=vector_store, llm=mock_llm, config=config,
@@ -91,7 +91,7 @@ class TestConflictResolution:
 
 class TestTombstones:
     def test_tombstones_bounded(self, episode_buffer, palace, vector_store, mock_llm):
-        config = NexusConfig()
+        config = SmritiConfig()
         engine = ConsolidationEngine(
             episode_buffer=episode_buffer, palace=palace,
             vector_store=vector_store, llm=mock_llm, config=config,
@@ -102,7 +102,7 @@ class TestTombstones:
 
 class TestConsolidationLog:
     def test_log_bounded(self, episode_buffer, palace, vector_store, mock_llm):
-        config = NexusConfig()
+        config = SmritiConfig()
         engine = ConsolidationEngine(
             episode_buffer=episode_buffer, palace=palace,
             vector_store=vector_store, llm=mock_llm, config=config,
@@ -113,7 +113,7 @@ class TestConsolidationLog:
 
 class TestStats:
     def test_stats(self, episode_buffer, palace, vector_store, mock_llm):
-        config = NexusConfig()
+        config = SmritiConfig()
         engine = ConsolidationEngine(
             episode_buffer=episode_buffer, palace=palace,
             vector_store=vector_store, llm=mock_llm, config=config,

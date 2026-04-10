@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.1] - 2026-04-05
 
 ### Fixed
-- **MCP Server**: Fixed `nexus_consolidate` response key mismatch — previously always returned `processed: 0` and a bare depth string instead of actual process count and status. Now correctly reports successful process count, process names, and handles the deferred case explicitly
+- **MCP Server**: Fixed `smriti_consolidate` response key mismatch — previously always returned `processed: 0` and a bare depth string instead of actual process count and status. Now correctly reports successful process count, process names, and handles the deferred case explicitly
 
 ### Changed
 - **README**: Updated benchmark tables with validated v1.0.0 results across 4 models (gpt-4o-mini, Mistral 7B, CodeLlama 7B, Llama 3.2 3B). Added local model comparison section and "What's New in v1.0.0" section
@@ -34,7 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.14] - 2026-03-27
 
 ### Fixed
-- **Claude Code Hooks**: Fixed JSON schema for hooks in `install_nexus_mcp.sh` — now uses the correct two-level nesting with matcher groups so `nexus_recall`, `nexus_encode`, and `nexus_get_context` hooks trigger properly
+- **Claude Code Hooks**: Fixed JSON schema for hooks in `install_smriti_mcp.sh` — now uses the correct two-level nesting with matcher groups so `smriti_recall`, `smriti_encode`, and `smriti_get_context` hooks trigger properly
 - **Install Script**: Added required `"matcher"` field to all hook definitions
 
 ### Changed
@@ -43,16 +43,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.13] - 2026-03-19
 
 ### Added
-- **MCP Server** (`nexus/integrations/mcp_server.py`): Exposes NEXUS as a Claude Code MCP server via stdio transport
-  - 10 tools: `nexus_encode`, `nexus_recall`, `nexus_get_context`, `nexus_how_well_do_i_know`, `nexus_knowledge_gaps`, `nexus_pin`, `nexus_forget`, `nexus_consolidate`, `nexus_stats`, `nexus_get_suggestions`
+- **MCP Server** (`smriti/integrations/mcp_server.py`): Exposes SMRITI as a Claude Code MCP server via stdio transport
+  - 10 tools: `smriti_encode`, `smriti_recall`, `smriti_get_context`, `smriti_how_well_do_i_know`, `smriti_knowledge_gaps`, `smriti_pin`, `smriti_forget`, `smriti_consolidate`, `smriti_stats`, `smriti_get_suggestions`
   - LLM provider auto-detected from model name prefix (`claude-*` → Anthropic, `gpt-*` → OpenAI, `gemini*` → Gemini, else Ollama)
-  - Configured via environment variables: `NEXUS_STORAGE_PATH`, `NEXUS_LLM_MODEL`, `NEXUS_LLM_API_KEY`
-- **Install script** (`install_nexus_mcp.sh`): One-command setup that installs `nexus-memory[mcp]` in a dedicated venv, sets up git hooks, adds a `SessionStart` hook for Claude Code, patches `~/.claude.json` safely, and validates Ollama models
+  - Configured via environment variables: `SMRITI_STORAGE_PATH`, `SMRITI_LLM_MODEL`, `SMRITI_LLM_API_KEY`
+- **Install script** (`install_smriti_mcp.sh`): One-command setup that installs `smriti-memory[mcp]` in a dedicated venv, sets up git hooks, adds a `SessionStart` hook for Claude Code, patches `~/.claude.json` safely, and validates Ollama models
 - **31 MCP server tests** covering all tools, routing logic, error handling, and edge cases
 - LongMemEval benchmark integration and updated benchmark results in README
 
 ### Changed
-- **LangChain Integration**: `NexusLangChainHistory.messages` now injects both **System 2** (abstract knowledge from the Semantic Palace) and **System 1** (raw episodic events from the Episode Buffer) into the LLM context, achieving true Dual-Process memory recall.
+- **LangChain Integration**: `SmritiLangChainHistory.messages` now injects both **System 2** (abstract knowledge from the Semantic Palace) and **System 1** (raw episodic events from the Episode Buffer) into the LLM context, achieving true Dual-Process memory recall.
 - **LLM Interface**: `generate_json()` now accepts and forwards a `max_tokens` parameter (default `4096`) for finer control over JSON generation responses.
 
 ### Fixed
@@ -68,12 +68,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 5 new backend tests (159 total)
 
 ### Changed
-- `pip install nexus-memory[faiss]` now installs FAISS support
+- `pip install smriti-memory[faiss]` now installs FAISS support
 
 ## [0.1.0] - 2025-03-03
 
 ### Added
-- **Core Architecture**: NEXUS orchestrator with encode/recall/consolidate lifecycle
+- **Core Architecture**: SMRITI orchestrator with encode/recall/consolidate lifecycle
 - **Semantic Palace**: Graph-based memory clustering with typed edges, room auto-creation, and multi-hop associative retrieval
 - **Working Memory**: Capacity-bounded (7±2 slots) priority queue with deduplication, active/peripheral context split
 - **Attention Gate**: Dual scoring (heuristic + LLM) with 5-dimension salience filter

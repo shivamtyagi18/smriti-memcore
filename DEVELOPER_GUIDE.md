@@ -1,8 +1,8 @@
-# NEXUS Memory: Developer Design Document
+# SMRITI Memory: Developer Design Document
 
-This document outlines the core internal process flows of the NEXUS memory system, specifically tracing the path of data from user input through ingestion, retrieval, and background consolidation. It is intended to help new engineers navigate the codebase and understand the Dual-Process architecture.
+This document outlines the core internal process flows of the SMRITI memory system, specifically tracing the path of data from user input through ingestion, retrieval, and background consolidation. It is intended to help new engineers navigate the codebase and understand the Dual-Process architecture.
 
-*(Note: For documentation on attaching NEXUS to existing agent chains, see the `nexus/integrations/` module.)*
+*(Note: For documentation on attaching SMRITI to existing agent chains, see the `smriti/integrations/` module.)*
 
 ---
 
@@ -11,8 +11,8 @@ This document outlines the core internal process flows of the NEXUS memory syste
 When a user sends a message to the agent, the agent must quickly store the message before generating a response. This process is strictly heuristic and takes milliseconds.
 
 ### Trace Path
-1. **Agent Wrapper:** The integrating agent calls `nexus.encode(text="User prefers Python.")`.
-2. **`core.py` (NEXUS.encode):** The orchestrator receives the raw text.
+1. **Agent Wrapper:** The integrating agent calls `smriti.encode(text="User prefers Python.")`.
+2. **`core.py` (SMRITI.encode):** The orchestrator receives the raw text.
 3. **`attention_gate.py` (Salience Filter):** The text is passed through the `AttentionGate`. A fast heuristic rule-engine checks for keywords, error markers, or explicit commands to score the text across 5 dimensions (surprise, relevance, emotional, novelty, utility). If the composite score falls below `discard_threshold`, the message is silently dropped to prevent DB bloat.
 4. **`vector_store.py` (Embedding):** The text is embedded into a 384-dimensional vector using the local `SentenceTransformer` backend.
 5. **`episode_buffer.py` (Storage):** The text, vector, and salience score are wrapped in an `Episode` dataclass (from `models.py`) and appended to the SQLite `episodes` table.
@@ -22,11 +22,11 @@ When a user sends a message to the agent, the agent must quickly store the messa
 
 ## 2. Real-Time Retrieval Flow (`memory.recall()`)
 
-When the agent needs context to answer a user's question, it queries NEXUS. This flow prioritizes algorithmic speed over LLM reasoning.
+When the agent needs context to answer a user's question, it queries SMRITI. This flow prioritizes algorithmic speed over LLM reasoning.
 
 ### Trace Path
-1. **Agent Wrapper:** The integrating agent calls `nexus.recall(query="What language does the user prefer?", top_k=5)`.
-2. **`core.py` (NEXUS.recall):** The orchestrator passes the query string to the `RetrievalEngine`.
+1. **Agent Wrapper:** The integrating agent calls `smriti.recall(query="What language does the user prefer?", top_k=5)`.
+2. **`core.py` (SMRITI.recall):** The orchestrator passes the query string to the `RetrievalEngine`.
 3. **`vector_store.py` (Flat Search):** The query is embedded. The `VectorStore` (FAISS or NumPy) performs a pure cosine-similarity search against *both* unconsolidated `Episodes` and fully consolidated `Memories`. It returns a widened pool of top candidates (e.g., $K \times 3$).
 4. **`retrieval.py` (Heuristic Scoring):** The `RetrievalEngine` loops over every candidate and computes a modified score:
    $$Q(v) = \beta_1(Cosine) + \beta_2(Temporal\_Decay) + \beta_3(Retrieval\_Strength) + \beta_4(Salience)$$
@@ -38,11 +38,11 @@ When the agent needs context to answer a user's question, it queries NEXUS. This
 
 ## 3. System 2: Asynchronous Consolidation Flow (`memory.consolidate()`)
 
-This is the "slow", analytical, LLM-driven heart of NEXUS. It runs in an isolated background thread and is responsible for maintaining the `SemanticPalace`.
+This is the "slow", analytical, LLM-driven heart of SMRITI. It runs in an isolated background thread and is responsible for maintaining the `SemanticPalace`.
 
 ### Trace Path
 1. **Trigger:** Called manually or automatically triggered by `encode()`.
-2. **`core.py` (NEXUS.consolidate):** Spawns a thread calling the `ConsolidationEngine`.
+2. **`core.py` (SMRITI.consolidate):** Spawns a thread calling the `ConsolidationEngine`.
 3. **`consolidation.py` (The Engine):** Executes up to 8 distinct processes sequentially, depending on the requested depth (`LIGHT` vs `FULL`).
 
 #### The 8 Consolidation Processes:
@@ -68,7 +68,7 @@ Each of the 8 processes is individually wrapped in a `try/except` block. If the 
 
 ---
 
-## 4. Key Data Models (`nexus/models.py`)
+## 4. Key Data Models (`smriti/models.py`)
 
 *   `Episode`: Short-term, timestamped vector. Has a `salience` score.
 *   `Memory`: Long-term fact. Has `strength`, `confidence`, and belongs to a `room_id`.

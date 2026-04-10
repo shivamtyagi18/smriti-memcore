@@ -1,8 +1,8 @@
-"""Tests for nexus.meta_memory — confidence mapping, gap tracking."""
+"""Tests for smriti.meta_memory — confidence mapping, gap tracking."""
 
 import pytest
-from nexus.models import ConfidenceLevel, DecisionType
-from nexus.meta_memory import MetaMemory, _topic_overlap
+from smriti.models import ConfidenceLevel, DecisionType
+from smriti.meta_memory import MetaMemory, _topic_overlap
 
 
 class TestConfidenceMap:

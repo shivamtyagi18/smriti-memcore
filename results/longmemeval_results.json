@@ -1,6 +1,6 @@
 {
   "summary": {
-    "method": "NEXUS",
+    "method": "SMRITI",
     "total_cases": 5,
     "accuracy": 0.8,
     "latency": 0.9806971549987793

@@ -1,5 +1,5 @@
 """
-NEXUS v2 — Shared data models.
+SMRITI v2 — Shared data models.
 All core dataclasses, enums, and configuration used across the system.
 """
 
@@ -101,7 +101,7 @@ class SalienceScore:
 
 @dataclass
 class Memory:
-    """A single memory unit — the fundamental atom of the NEXUS system."""
+    """A single memory unit — the fundamental atom of the SMRITI system."""
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     content: str = ""
     embedding: Optional[List[float]] = None
@@ -261,8 +261,8 @@ class ConfidenceLevel:
 # ──────────────────────────────────────────────────────────
 
 @dataclass
-class NexusConfig:
-    """Configuration for a NEXUS instance."""
+class SmritiConfig:
+    """Configuration for a SMRITI instance."""
     # Working Memory
     working_memory_slots: int = 7
     active_chunks: int = 4
@@ -312,7 +312,7 @@ class NexusConfig:
     embedding_dim: int = 384
 
     # Storage
-    storage_path: str = "./nexus_data"
+    storage_path: str = "./smriti_data"
 
     # Safety
     max_content_length: int = 50_000        # Max chars per memory content

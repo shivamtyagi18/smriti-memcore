@@ -1,13 +1,13 @@
-"""Tests for nexus.retrieval — multi-hop search, spreading activation."""
+"""Tests for smriti.retrieval — multi-hop search, spreading activation."""
 
 import pytest
-from nexus.models import NexusConfig, Memory, SalienceScore
-from nexus.retrieval import RetrievalEngine
+from smriti.models import SmritiConfig, Memory, SalienceScore
+from smriti.retrieval import RetrievalEngine
 
 
 class TestBasicRetrieval:
     def test_retrieve_finds_memories(self, palace, vector_store, working_memory, make_memory):
-        config = NexusConfig()
+        config = SmritiConfig()
         engine = RetrievalEngine(
             palace=palace, working_memory=working_memory,
             vector_store=vector_store, config=config,
@@ -21,7 +21,7 @@ class TestBasicRetrieval:
         assert any("Python" in r.content for r in results)
 
     def test_retrieve_empty_palace(self, palace, vector_store, working_memory):
-        config = NexusConfig()
+        config = SmritiConfig()
         engine = RetrievalEngine(
             palace=palace, working_memory=working_memory,
             vector_store=vector_store, config=config,
@@ -32,7 +32,7 @@ class TestBasicRetrieval:
 
 class TestRetrievalStats:
     def test_stats(self, palace, vector_store, working_memory):
-        config = NexusConfig()
+        config = SmritiConfig()
         engine = RetrievalEngine(
             palace=palace, working_memory=working_memory,
             vector_store=vector_store, config=config,
@@ -43,7 +43,7 @@ class TestRetrievalStats:
 
 class TestMultipleMemories:
     def test_top_k_respected(self, palace, vector_store, working_memory, make_memory):
-        config = NexusConfig()
+        config = SmritiConfig()
         engine = RetrievalEngine(
             palace=palace, working_memory=working_memory,
             vector_store=vector_store, config=config,

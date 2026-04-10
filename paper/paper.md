@@ -1,9 +1,9 @@
-# NEXUS: A Scalable, Neuro-Inspired Architecture for Long-Term Event Memory in LLM Agents
+# SMRITI: A Scalable, Neuro-Inspired Architecture for Long-Term Event Memory in LLM Agents
 
 **DOI:** [10.13140/RG.2.2.25477.82407](https://doi.org/10.13140/RG.2.2.25477.82407)
 
 **Abstract**
-As Large Language Models (LLMs) are deployed in persistent, long-running agentic applications, scalable long-term memory architectures have become critical. Existing approaches, such as naive vector retrieval (RAG) or summarization-based tiered memory, either lack semantic depth or suffer from severe ingestion bottlenecks. We introduce NEXUS, a neuro-inspired memory architecture that combines a capacity-limited Working Memory, a knowledge-graph-based Semantic Palace, and an asynchronous background Consolidation Engine with eight distinct maintenance processes. We benchmark NEXUS against established paradigms (Full Context, Naive RAG, Mem0, and MemGPT) on the LoCoMo dataset, showing it achieves competitive retrieval accuracy (F1=0.279) while reducing extraction ingestion overhead by over 98%. Furthermore, evaluations on the LongMemEval benchmark demonstrate that NEXUS's Dual-Process retrieval engine maintains 80.0% exact-match accuracy over multi-session histories while delivering a >12× latency reduction (0.98s vs 11.98s) compared to full-context baselines.
+As Large Language Models (LLMs) are deployed in persistent, long-running agentic applications, scalable long-term memory architectures have become critical. Existing approaches, such as naive vector retrieval (RAG) or summarization-based tiered memory, either lack semantic depth or suffer from severe ingestion bottlenecks. We introduce SMRITI, a neuro-inspired memory architecture that combines a capacity-limited Working Memory, a knowledge-graph-based Semantic Palace, and an asynchronous background Consolidation Engine with eight distinct maintenance processes. We benchmark SMRITI against established paradigms (Full Context, Naive RAG, Mem0, and MemGPT) on the LoCoMo dataset, showing it achieves competitive retrieval accuracy (F1=0.279) while reducing extraction ingestion overhead by over 98%. Furthermore, evaluations on the LongMemEval benchmark demonstrate that SMRITI's Dual-Process retrieval engine maintains 80.0% exact-match accuracy over multi-session histories while delivering a >12× latency reduction (0.98s vs 11.98s) compared to full-context baselines.
 
 ## 1. Introduction
 
@@ -14,7 +14,7 @@ Current industry solutions for long-term memory integration typically fall into 
 2. **Naive RAG (Retrieval-Augmented Generation):** Embedding every user interaction into a traditional flat vector database for static top-$k$ nearest-neighbor retrieval. This approach solves scaling limits but inherently loses strict temporal sequence dependencies and fails to resolve multi-hop conceptual semantic definitions (Lewis et al., 2020).
 3. **Tiered & Agentic Memory:** Utilizing the generative LLM itself to summarize, logically organize, and actively extract discrete psychological facts from raw conversations to confidently place them into an archival structured database. While highly semantically rich, these specific systems introduce massive structural ingestion latency as every new interaction requires slow, expensive, and synchronous LLM generative calls (Packer et al., 2023).
 
-In this paper, we present **NEXUS**, an architecture inspired by human cognitive science (Tulving, 1972) that decouples real-time interaction ingestion from deep semantic consolidation. By structuring memory into a knowledge graph (termed the *Semantic Palace*) which is continuously maintained via asynchronous background processes, NEXUS combines the semantic depth of tiered agentic systems with the ingestion speed of naive vector search.
+In this paper, we present **SMRITI**, an architecture inspired by human cognitive science (Tulving, 1972) that decouples real-time interaction ingestion from deep semantic consolidation. By structuring memory into a knowledge graph (termed the *Semantic Palace*) which is continuously maintained via asynchronous background processes, SMRITI combines the semantic depth of tiered agentic systems with the ingestion speed of naive vector search.
 
 ## 2. Literature Survey
 
@@ -24,16 +24,16 @@ Persistent, scalable memory in autonomous AI agents spans multiple paradigms, ea
 Retrieval-Augmented Generation (RAG) architectures embed text into high-dimensional vector spaces using frozen embedding models (Reimers & Gurevych, 2019). Systems like REALM (Guu et al., 2020) and Retro (Borgeaud et al., 2022) retrieve textual blocks from corpora to enhance factual accuracy. While efficient during ingestion, flat vector systems fail to capture multi-hop dependencies or maintain temporal conversational timelines, treating conversational elements as isolated artifacts rather than temporally-dependent episodes. Dense Passage Retrieval (Karpukhin et al., 2020) improves matching accuracy but does not solve timeline fragmentation in dialogue agents.
 
 ### 2.2 LLMs as Operating Systems and Tiered Memory
-To overcome flat retrieval limitations, researchers have analogized LLM memory to computer storage (Mei et al., 2024). MemGPT proposes a tiered, paging-based hierarchy using main context (RAM) and external vector databases (Disk), triggering summarize-on-eviction LLM calls when the context window overflows. Mem0 extracts fine-grained user facts upon every message receipt. While semantically robust, these approaches introduce an O(N) ingestion bottleneck, as every turn requires synchronous LLM reflection. More recently, Letta (Packer et al., 2024) evolved MemGPT into a production system with persistent agent state. LangMem (LangChain, 2025) introduced background memory consolidation for LLM agents. A-MEM (2025) proposed self-organizing memory structures. Zep (2024) explored temporal knowledge graphs for agent memory. These systems individually implement subsets of the processes NEXUS integrates.
+To overcome flat retrieval limitations, researchers have analogized LLM memory to computer storage (Mei et al., 2024). MemGPT proposes a tiered, paging-based hierarchy using main context (RAM) and external vector databases (Disk), triggering summarize-on-eviction LLM calls when the context window overflows. Mem0 extracts fine-grained user facts upon every message receipt. While semantically robust, these approaches introduce an O(N) ingestion bottleneck, as every turn requires synchronous LLM reflection. More recently, Letta (Packer et al., 2024) evolved MemGPT into a production system with persistent agent state. LangMem (LangChain, 2025) introduced background memory consolidation for LLM agents. A-MEM (2025) proposed self-organizing memory structures. Zep (2024) explored temporal knowledge graphs for agent memory. These systems individually implement subsets of the processes SMRITI integrates.
 
 ### 2.3 Cognitive and Generative Architectures
 Generative architectures (Park et al., 2023) utilize memory streams combined with reflection trees to synthesize rules from simulated events. Voyager constructs libraries of executable procedural logic, mimicking skill acquisition. The mnemonic "Mind Palace" concept has been adapted for visual and embodied AI domains, mapping 3D topologies for video understanding and robotic QA (Wang et al., 2025; Ginting et al., 2025).
 
-NEXUS builds upon dual-process cognitive theory (Kahneman, 2011) but decouples data ingestion from consolidation. By implementing fast heuristic encoding (System 1) followed by asynchronous consolidation (System 2), NEXUS eliminates the ingestion bottleneck. The term *Semantic Palace* is used metaphorically—it refers to a thematic knowledge graph with room-based clustering, distinct from the spatial mnemonic Method of Loci. Prior systems implement individual maintenance processes (reflection in Generative Agents, skill libraries in Voyager, summarization-on-eviction in MemGPT) in isolation; NEXUS is the first to integrate all eight in a unified asynchronous engine.
+SMRITI builds upon dual-process cognitive theory (Kahneman, 2011) but decouples data ingestion from consolidation. By implementing fast heuristic encoding (System 1) followed by asynchronous consolidation (System 2), SMRITI eliminates the ingestion bottleneck. The term *Semantic Palace* is used metaphorically—it refers to a thematic knowledge graph with room-based clustering, distinct from the spatial mnemonic Method of Loci. Prior systems implement individual maintenance processes (reflection in Generative Agents, skill libraries in Voyager, summarization-on-eviction in MemGPT) in isolation; SMRITI is the first to integrate all eight in a unified asynchronous engine.
 
-## 3. The NEXUS Architecture
+## 3. The SMRITI Architecture
 
-The NEXUS system comprises six core interacting software modules designed to directly replicate observed neuro-biological mammalian memory processes.
+The SMRITI system comprises six core interacting software modules designed to directly replicate observed neuro-biological mammalian memory processes.
 
 ### 3.1 Episode Buffer (Heuristic Fast Ingest)
 Incoming interactive text data is appended to a persistent, SQLite-backed temporal log using lightweight embedding models (`all-MiniLM-L6-v2`, 384 dimensions). Each episode is stored with a 5-dimensional salience annotation, optional trajectory tracking (for multi-step procedural sequences), and reflection annotations generated during later consolidation. This isolation removes the generative path of the interactive agent from the computational lifting of semantic organization, reducing interaction latency to sub-50 millisecond encoding speeds. Only unconsolidated episodes are held in RAM; consolidated episodes remain in SQLite and are queried lazily on demand.
@@ -57,7 +57,7 @@ combining mapped cosine similarity, mathematical exponential temporal decay base
 Drawing heavily on the established psychological "testing effect" (Roediger & Karpicke, 2006), successfully and accurately retrieved memory strings are structurally weighted and strengthened upon recall. Furthermore, an isolated secondary Meta-Memory module maps probability confidence levels across internal system topics, allowing the generative focal agent to articulate logical knowledge blind-spots without hallucination.
 
 ### 3.6 The Asynchronous Consolidation Engine
-A core component of NEXUS is its deferred background memory maintenance. Eight decoupled computational processes operate on the Semantic Palace graph geometry without interrupting dialogue flow. Consolidation is triggered by event-driven conditions (e.g., number of unconsolidated episodes, time since last run) rather than fixed schedules, and supports two depths: *LIGHT* (processes 1–3) for routine maintenance and *FULL* (all 8) for deep reorganization. Each process is wrapped in isolated error recovery—a failure in one process does not block the remaining processes.
+A core component of SMRITI is its deferred background memory maintenance. Eight decoupled computational processes operate on the Semantic Palace graph geometry without interrupting dialogue flow. Consolidation is triggered by event-driven conditions (e.g., number of unconsolidated episodes, time since last run) rather than fixed schedules, and supports two depths: *LIGHT* (processes 1–3) for routine maintenance and *FULL* (all 8) for deep reorganization. Each process is wrapped in isolated error recovery—a failure in one process does not block the remaining processes.
 
 1. **Chunking:** Semantically groups related unconsolidated episodes using embedding similarity and generates concise summaries via the LLM, which are then placed into Semantic Palace rooms.
 2. **Conflict Resolution:** Detects contradicting memories within the same room by querying the LLM for contradiction analysis, then resolves by superseding the older or weaker memory.
@@ -70,7 +70,7 @@ A core component of NEXUS is its deferred background memory maintenance. Eight d
 
 ## 4. Experimental Benchmark Setup
 
-We evaluated NEXUS against four baselines to measure retrieval accuracy, latency, token efficiency, and ingestion scalability.
+We evaluated SMRITI against four baselines to measure retrieval accuracy, latency, token efficiency, and ingestion scalability.
 
 ### 4.1 Dataset Configuration (LoCoMo)
 We utilized a **LoCoMo**-format (Long Context Multi-turn) dataset comprising multi-session dialogs with complex temporal and factual references. The benchmark executed over 5 sessions containing **28 dialog turns**, paired with 15 evaluation questions spanning five categories: single-hop factual (5), multi-hop reasoning (5), temporal (2), knowledge update (1), and abstention (2).
@@ -79,26 +79,26 @@ We utilized a **LoCoMo**-format (Long Context Multi-turn) dataset comprising mul
 To specifically isolate and validate exact-match factual retrieval across long multi-session chat histories, we additionally integrated the **LongMemEval** benchmark (Maharana et al., 2024). This dataset tests the agent's ability to extract specific details hidden deep within conversational transcripts.
 
 ### 4.3 Evaluated Baseline Architectures
-We compared NEXUS against four baselines:
+We compared SMRITI against four baselines:
 1. **FullContext:** Injects the entire conversation history directly into the LLM context window for every query.
 2. **NaiveRAG:** A flat FAISS vector store with unweighted top-$k$ nearest-neighbor retrieval.
 3. **Mem0-style:** Generative fact extraction; synchronously invokes LLM summarization on every message.
 4. **MemGPT-style:** Tiered context paging; invokes summarization upon capacity eviction.  
 
 ### 4.4 Evaluation Models
-All five systems were evaluated using **GPT-4o-mini** (OpenAI) and **Gemini 2.5 Flash** (Google) via their respective APIs. NEXUS was tested with the full consolidation pipeline enabled (FULL depth, all 8 processes) running after ingestion. Sentence embeddings used `all-MiniLM-L6-v2` (384 dimensions) across all systems.
+All five systems were evaluated using **GPT-4o-mini** (OpenAI) and **Gemini 2.5 Flash** (Google) via their respective APIs. SMRITI was tested with the full consolidation pipeline enabled (FULL depth, all 8 processes) running after ingestion. Sentence embeddings used `all-MiniLM-L6-v2` (384 dimensions) across all systems.
 
 ## 5. Benchmark Results and Analysis
 
 ### 5.1 Overall Retrieval Accuracy
-All five systems were evaluated on 15 questions spanning five categories from the LoCoMo dataset. NEXUS was tested with full consolidation (all 8 processes) run after ingestion.
+All five systems were evaluated on 15 questions spanning five categories from the LoCoMo dataset. SMRITI was tested with full consolidation (all 8 processes) run after ingestion.
 
 | System | F1 Score | Latency (avg) | Tokens (avg) | Ingest Time | Consolidation |
 |--------|----------|---------------|--------------|-------------|---------------|
 | FullContext | **0.345** | 1147ms | 550 | 0.0s | — |
 | MemGPTStyle | 0.334 | 1397ms | 478 | 8.1s | — |
 | NaiveRAG | 0.312 | 1387ms | 145 | 2.2s | — |
-| NEXUS v2 | 0.279 | 1317ms | **146** | **4.9s** | 41.2s |
+| SMRITI v2 | 0.279 | 1317ms | **146** | **4.9s** | 41.2s |
 | Mem0Style | 0.235 | 1088ms | 106 | 14.7s | — |
 
 *Table 1: Benchmark results across memory architectures using GPT-4o-mini.*
@@ -106,14 +106,14 @@ All five systems were evaluated on 15 questions spanning five categories from th
 ![Cross-Model F1 Comparison](figures/fig1_cross_model_f1.png)
 *Figure 1: F1 retrieval accuracy comparison across GPT-4o-mini and Gemini 2.5 Flash.*
 
-FullContext achieves the highest overall F1 (0.345) by providing the LLM with the complete conversation history, at the cost of 3.8× higher token usage (550 vs 146 tokens per query). NEXUS is competitive with NaiveRAG (F1 difference of 0.033) while providing structured semantic organization through consolidation.
+FullContext achieves the highest overall F1 (0.345) by providing the LLM with the complete conversation history, at the cost of 3.8× higher token usage (550 vs 146 tokens per query). SMRITI is competitive with NaiveRAG (F1 difference of 0.033) while providing structured semantic organization through consolidation.
 
-**Total time to usable memory** for NEXUS (ingestion + consolidation) is 46.1 seconds. This is significantly faster than Mem0-style extraction (14.7s synchronous ingestion, no deferred processing) and MemGPT-style archival (8.1s). Critically, NEXUS consolidation runs asynchronously and does not block the interactive agent—queries can be served immediately after the 4.9s ingestion phase.
+**Total time to usable memory** for SMRITI (ingestion + consolidation) is 46.1 seconds. This is significantly faster than Mem0-style extraction (14.7s synchronous ingestion, no deferred processing) and MemGPT-style archival (8.1s). Critically, SMRITI consolidation runs asynchronously and does not block the interactive agent—queries can be served immediately after the 4.9s ingestion phase.
 
 ### 5.2 Per-Category Breakdown
 Breaking down F1 by question category reveals architectural strengths:
 
-| Category | NEXUS | NaiveRAG | FullContext | Mem0 | MemGPT |
+| Category | SMRITI | NaiveRAG | FullContext | Mem0 | MemGPT |
 |----------|-------|----------|-------------|------|--------|
 | single_hop | 0.350 | 0.440 | **0.430** | 0.307 | 0.413 |
 | multi_hop | 0.202 | 0.195 | **0.316** | 0.240 | 0.268 |
@@ -123,19 +123,19 @@ Breaking down F1 by question category reveals architectural strengths:
 
 *Table 2: F1 scores by question category (bold = best in category).*
 
-NEXUS achieves the second-highest score on knowledge-update questions (0.640), where the system must recognize that a previously stated fact has been superseded. This directly validates the Consolidation Engine's conflict resolution process (Process 2). On multi-hop questions, NEXUS (0.202) is competitive with NaiveRAG (0.195), suggesting the graph structure provides a marginal advantage for connecting information across thematic boundaries.
+SMRITI achieves the second-highest score on knowledge-update questions (0.640), where the system must recognize that a previously stated fact has been superseded. This directly validates the Consolidation Engine's conflict resolution process (Process 2). On multi-hop questions, SMRITI (0.202) is competitive with NaiveRAG (0.195), suggesting the graph structure provides a marginal advantage for connecting information across thematic boundaries.
 
 ### 5.3 Token Efficiency
-NEXUS and NaiveRAG use the fewest tokens per query (~146 on GPT-4o-mini), compared to FullContext (550) and MemGPT (478). For production deployments where API costs scale with token usage, this represents a 3.3× cost reduction compared to FullContext while maintaining 81% of its F1 score.
+SMRITI and NaiveRAG use the fewest tokens per query (~146 on GPT-4o-mini), compared to FullContext (550) and MemGPT (478). For production deployments where API costs scale with token usage, this represents a 3.3× cost reduction compared to FullContext while maintaining 81% of its F1 score.
 
 ![Token Efficiency vs F1](figures/fig2_token_efficiency.png)
 *Figure 2: Token efficiency vs retrieval accuracy. Circles = GPT-4o-mini, triangles = Gemini 2.5 Flash. Arrows show model impact.*
 
 ![Per-Category Heatmap](figures/fig3_category_heatmap.png)
-*Figure 3: F1 scores by question category for GPT-4o-mini. NEXUS and MemGPT lead on knowledge-update questions.*
+*Figure 3: F1 scores by question category for GPT-4o-mini. SMRITI and MemGPT lead on knowledge-update questions.*
 
 ![Processing Time](figures/fig4_processing_time.png)
-*Figure 4: Data processing time. NEXUS consolidation (hatched) runs asynchronously after fast ingestion.*
+*Figure 4: Data processing time. SMRITI consolidation (hatched) runs asynchronously after fast ingestion.*
 
 ### 5.4 Vector Backend Performance Analysis
 We benchmarked two vector search backends at varying memory store sizes: NumPy brute-force cosine similarity and FAISS `IndexFlatIP` (inner-product on L2-normalized embeddings). Experiments used 384-dimensional vectors with 100 queries per scale, top-$k = 10$.
@@ -147,7 +147,7 @@ We benchmarked two vector search backends at varying memory store sizes: NumPy b
 | NumPy   | 100,000 | 2.75 ms    | 3.07 ms    | 146.5 MB        |
 | FAISS   | 100,000 | 2.24 ms    | 2.45 ms    | 979 B           |
 
-At 100K vectors, FAISS provides a 1.2× search speedup with near-constant memory overhead (~1 KB vs 146.5 MB for NumPy). NEXUS auto-detects FAISS availability and falls back to NumPy when unavailable.
+At 100K vectors, FAISS provides a 1.2× search speedup with near-constant memory overhead (~1 KB vs 146.5 MB for NumPy). SMRITI auto-detects FAISS availability and falls back to NumPy when unavailable.
 
 ### 5.5 Cross-Model Validation (Gemini 2.5 Flash)
 To validate model independence, we repeated the full benchmark using Gemini 2.5 Flash:
@@ -158,28 +158,28 @@ To validate model independence, we repeated the full benchmark using Gemini 2.5 
 | FullContext | **0.345** | 0.369 | +0.024 |
 | Mem0Style | 0.235 | 0.367 | +0.132 |
 | NaiveRAG | 0.312 | 0.278 | −0.034 |
-| NEXUS v2 | 0.279 | 0.216 | −0.063 |
+| SMRITI v2 | 0.279 | 0.216 | −0.063 |
 
 *Table 4: Cross-model F1 comparison. Bold = best per model.*
 
 Key observations:
 - **MemGPT benefits most** from Gemini (+0.210), as its summarization-on-eviction approach leverages the stronger model's superior text compression.
 - **Mem0 also improves significantly** (+0.132), as fact extraction quality increases with model capability.
-- **NEXUS scores lower** with Gemini (−0.063). Investigation suggests Gemini's verbose responses interact differently with the consolidation pipeline's JSON parsing and chunking prompts, which were originally tuned for shorter-output models.
+- **SMRITI scores lower** with Gemini (−0.063). Investigation suggests Gemini's verbose responses interact differently with the consolidation pipeline's JSON parsing and chunking prompts, which were originally tuned for shorter-output models.
 - **FullContext** is the most model-stable system (+0.024), as expected for a system that simply passes all context to the LLM.
 - This cross-model variation highlights that **prompt engineering for the consolidation pipeline is model-dependent** and represents an area for future optimization.
 
 ### 5.6 LongMemEval: Dual-Process Retrieval Performance
-We directly evaluated the Dual-Process precision of the Retrieval Engine using the LongMemEval benchmark. By dynamically injecting both System 1 (raw episodic logs from the Episode Buffer) and System 2 (graph summaries from the Semantic Palace) into the context window, NEXUS was evaluated against a standard FullContext baseline over 50+ chat sessions.
+We directly evaluated the Dual-Process precision of the Retrieval Engine using the LongMemEval benchmark. By dynamically injecting both System 1 (raw episodic logs from the Episode Buffer) and System 2 (graph summaries from the Semantic Palace) into the context window, SMRITI was evaluated against a standard FullContext baseline over 50+ chat sessions.
 
 | System Configuration | Exact Match Accuracy | Average Inquiry Latency |
 |----------------------|-----------------------|-------------------------|
 | **Baseline (Full Context)** | 100.0% | **11.98s** |
-| **NEXUS Dual-Process** | **80.0%** | **0.98s** |
+| **SMRITI Dual-Process** | **80.0%** | **0.98s** |
 
 *Table 5: LongMemEval subset results.*
 
-While the Baseline achieves 100% precision by brute-forcing the prompt with over 5,000+ tokens of raw history, it incurs a massive latency penalty (nearly 12 seconds per query). In contrast, NEXUS achieves a highly competitive 80.0% accuracy on needle-in-a-haystack extraction tasks while restricting the LLM context to exactly the 5 most relevant episodes and memories, resulting in a **>12× latency reduction** (0.98s). This quantitatively establishes the viability of Dual-Process retrieval as a low-latency alternative to persistent long-context windows.
+While the Baseline achieves 100% precision by brute-forcing the prompt with over 5,000+ tokens of raw history, it incurs a massive latency penalty (nearly 12 seconds per query). In contrast, SMRITI achieves a highly competitive 80.0% accuracy on needle-in-a-haystack extraction tasks while restricting the LLM context to exactly the 5 most relevant episodes and memories, resulting in a **>12× latency reduction** (0.98s). This quantitatively establishes the viability of Dual-Process retrieval as a low-latency alternative to persistent long-context windows.
 
 ![LongMemEval Accuracy](figures/fig5_longmemeval_accuracy.png)
 *Figure 5: LongMemEval exact-match accuracy comparison.*
@@ -190,7 +190,7 @@ While the Baseline achieves 100% precision by brute-forcing the prompt with over
 ## 6. Discussion and Limitations
 
 ### 6.1 The Impact of Consolidation
-The most significant finding is the impact of the Consolidation Engine. In earlier experiments using Mistral-7B without consolidation, NEXUS achieved an F1 of only 0.010—comparable to random retrieval. With consolidation enabled (all 8 processes), the same architecture achieves F1=0.279, a **28× improvement**. This validates the core architectural hypothesis: asynchronous semantic processing is essential for retrieval quality, and fast ingestion alone is insufficient.
+The most significant finding is the impact of the Consolidation Engine. In earlier experiments using Mistral-7B without consolidation, SMRITI achieved an F1 of only 0.010—comparable to random retrieval. With consolidation enabled (all 8 processes), the same architecture achieves F1=0.279, a **28× improvement**. This validates the core architectural hypothesis: asynchronous semantic processing is essential for retrieval quality, and fast ingestion alone is insufficient.
 
 ### 6.2 Consolidation Compute Cost
 Full consolidation of 28 messages took 41.2 seconds, involving LLM calls for chunking, reflection, and conflict resolution. The cost scales approximately linearly with the number of unconsolidated episodes. For the cross-referencing process (Process 5), pairwise room similarity is O(rooms²), which may become a bottleneck as the Palace grows beyond thousands of rooms. In practice, this can be mitigated by limiting cross-referencing to recently modified rooms.
@@ -222,7 +222,7 @@ Several limitations remain:
 
 Existing long-term memory architectures for LLM agents impose a strict trade-off: computationally expensive synchronous summarization (tiered memory) or fast but shallow retrieval (naive RAG).
 
-By decoupling ingestion from semantic consolidation, NEXUS avoids this trade-off. Our evaluation demonstrates that the 8-process Consolidation Engine is the key differentiator—enabling a 28× F1 improvement over ingestion-only operation. While NEXUS does not achieve the highest overall F1 (FullContext leads at 0.345 by providing the complete conversation to the LLM), it achieves competitive accuracy (0.279) with the lowest token usage among retrieval-augmented systems, and excels on knowledge-update questions where conflict resolution is critical.
+By decoupling ingestion from semantic consolidation, SMRITI avoids this trade-off. Our evaluation demonstrates that the 8-process Consolidation Engine is the key differentiator—enabling a 28× F1 improvement over ingestion-only operation. While SMRITI does not achieve the highest overall F1 (FullContext leads at 0.345 by providing the complete conversation to the LLM), it achieves competitive accuracy (0.279) with the lowest token usage among retrieval-augmented systems, and excels on knowledge-update questions where conflict resolution is critical.
 
 Future work includes larger-scale evaluations with statistical rigor, ablation studies isolating individual consolidation processes, and approximate nearest-neighbor indexes for scaling beyond 10K memories.
 

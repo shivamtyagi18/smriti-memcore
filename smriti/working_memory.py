@@ -1,5 +1,5 @@
 """
-NEXUS v2 — Working Memory.
+SMRITI v2 — Working Memory.
 Capacity-limited priority queue (Miller's Law: 7 slots) with
 eviction logging and proactive ambient monitoring.
 """
@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Callable, Dict, List, Optional
 
-from nexus.models import Memory
+from smriti.models import Memory
 
 logger = logging.getLogger(__name__)
 

@@ -1,5 +1,5 @@
 """
-Base interface for all memory systems (NEXUS + baselines).
+Base interface for all memory systems (SMRITI + baselines).
 Defines the common API that the benchmark harness talks to.
 """
 
@@ -25,7 +25,7 @@ class BaseMemorySystem(ABC):
     """
     Abstract base for all memory systems.
     
-    Every system (NEXUS + 4 baselines) implements this interface
+    Every system (SMRITI + 4 baselines) implements this interface
     so the benchmark harness can treat them uniformly.
     """
 

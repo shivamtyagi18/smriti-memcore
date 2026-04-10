@@ -1,5 +1,5 @@
 """
-NEXUS v2 — Metrics & Observability.
+SMRITI v2 — Metrics & Observability.
 Zero-dependency, thread-safe metrics for monitoring load, latency,
 performance, and memory health. Supports JSON snapshot and
 Prometheus text format export.
@@ -97,12 +97,12 @@ class _Histogram:
             }
 
 
-class NexusMetrics:
+class SmritiMetrics:
     """
-    Centralized metrics collector for NEXUS.
+    Centralized metrics collector for SMRITI.
 
     Usage:
-        metrics = NexusMetrics()
+        metrics = SmritiMetrics()
         metrics.encode_count.inc()
         metrics.encode_latency.observe(42.5)
         print(metrics.snapshot())     # JSON-friendly dict
@@ -199,27 +199,27 @@ class NexusMetrics:
             lines.append(f"{name}_sum {snap['sum']}")
             lines.append(f"{name}_count {snap['count']}")
 
-        _counter("nexus_encode_total", "Total encode operations", self.encode_count.value)
-        _counter("nexus_encode_discarded_total", "Discarded by attention gate", self.encode_discarded.value)
-        _hist("nexus_encode_latency_ms", "Encode latency in ms", self.encode_latency)
+        _counter("smriti_encode_total", "Total encode operations", self.encode_count.value)
+        _counter("smriti_encode_discarded_total", "Discarded by attention gate", self.encode_discarded.value)
+        _hist("smriti_encode_latency_ms", "Encode latency in ms", self.encode_latency)
 
-        _counter("nexus_recall_total", "Total recall operations", self.recall_count.value)
-        _counter("nexus_recall_empty_total", "Recalls returning zero results", self.recall_empty.value)
-        _hist("nexus_recall_latency_ms", "Recall latency in ms", self.recall_latency)
+        _counter("smriti_recall_total", "Total recall operations", self.recall_count.value)
+        _counter("smriti_recall_empty_total", "Recalls returning zero results", self.recall_empty.value)
+        _hist("smriti_recall_latency_ms", "Recall latency in ms", self.recall_latency)
 
-        _counter("nexus_consolidation_total", "Total consolidations", self.consolidation_count.value)
-        _counter("nexus_consolidation_errors_total", "Failed consolidation processes", self.consolidation_errors.value)
-        _hist("nexus_consolidation_latency_seconds", "Consolidation duration", self.consolidation_latency)
+        _counter("smriti_consolidation_total", "Total consolidations", self.consolidation_count.value)
+        _counter("smriti_consolidation_errors_total", "Failed consolidation processes", self.consolidation_errors.value)
+        _hist("smriti_consolidation_latency_seconds", "Consolidation duration", self.consolidation_latency)
 
-        _counter("nexus_llm_calls_total", "Total LLM calls", self.llm_call_count.value)
-        _counter("nexus_llm_errors_total", "Failed LLM calls", self.llm_errors.value)
-        _hist("nexus_llm_latency_ms", "LLM call latency in ms", self.llm_latency)
+        _counter("smriti_llm_calls_total", "Total LLM calls", self.llm_call_count.value)
+        _counter("smriti_llm_errors_total", "Failed LLM calls", self.llm_errors.value)
+        _hist("smriti_llm_latency_ms", "LLM call latency in ms", self.llm_latency)
 
-        _gauge("nexus_memories", "Current stored memories", self.memory_count.value)
-        _gauge("nexus_rooms", "Current palace rooms", self.room_count.value)
-        _gauge("nexus_episodes", "Current episodes", self.episode_count.value)
-        _gauge("nexus_vectors", "Current vector store entries", self.vector_count.value)
-        _gauge("nexus_working_memory_slots", "Working memory slots used", self.working_memory_occupancy.value)
-        _gauge("nexus_uptime_seconds", "Time since initialization", self.uptime_seconds)
+        _gauge("smriti_memories", "Current stored memories", self.memory_count.value)
+        _gauge("smriti_rooms", "Current palace rooms", self.room_count.value)
+        _gauge("smriti_episodes", "Current episodes", self.episode_count.value)
+        _gauge("smriti_vectors", "Current vector store entries", self.vector_count.value)
+        _gauge("smriti_working_memory_slots", "Working memory slots used", self.working_memory_occupancy.value)
+        _gauge("smriti_uptime_seconds", "Time since initialization", self.uptime_seconds)
 
         return "\n".join(lines) + "\n"

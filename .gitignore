@@ -15,9 +15,9 @@ venv_plots/
 .venv/
 env/
 
-# NEXUS runtime data
-nexus_data/
-nexus_db/
+# SMRITI runtime data
+smriti_data/
+smriti_db/
 data/
 *.faiss
 
@@ -54,7 +54,7 @@ paper2.txt
 _agent/
 
 # Test Databases
-langchain_nexus_db/
+langchain_smriti_db/
 
 .venv_langchain/
 

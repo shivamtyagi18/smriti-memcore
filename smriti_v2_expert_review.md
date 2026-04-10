@@ -1,4 +1,4 @@
-# 🔬 Expert Review: NEXUS Architecture
+# 🔬 Expert Review: SMRITI Architecture
 ## Critical Analysis, Identified Flaws & Corrected Design
 
 > *A review from the perspective of an AI systems researcher — where does the human-to-AI translation break, what's missing, and how to fix it.*
@@ -7,7 +7,7 @@
 
 ## Review Verdict
 
-NEXUS is a **strong conceptual framework** with genuinely novel ideas (Consolidation Engine, retrieval strengthening, managed forgetting). However, it contains **12 significant issues** ranging from broken implementations to missing components and flawed analogies. This review catalogs each issue and provides the corrected design.
+SMRITI is a **strong conceptual framework** with genuinely novel ideas (Consolidation Engine, retrieval strengthening, managed forgetting). However, it contains **12 significant issues** ranging from broken implementations to missing components and flawed analogies. This review catalogs each issue and provides the corrected design.
 
 ---
 
@@ -144,7 +144,7 @@ class ConflictResolver:
 
 ### Issue 5: No Meta-Memory (Knowing What You Know)
 
-**The problem:** Humans have **metacognition** — awareness of their own knowledge state. "I know I studied this but can't remember the details." "I have no idea about this topic." This is absent from NEXUS.
+**The problem:** Humans have **metacognition** — awareness of their own knowledge state. "I know I studied this but can't remember the details." "I have no idea about this topic." This is absent from SMRITI.
 
 **The fix — Meta-Memory Index:**
 
@@ -287,7 +287,7 @@ class SalienceWeightLearner:
 
 ### Issue 9: No Proactive Memory Surfacing
 
-**The problem:** NEXUS is entirely reactive — memories are only retrieved when explicitly queried. But human memory is frequently **proactive**: "Oh, this reminds me of..." "Wait, I should mention that..."
+**The problem:** SMRITI is entirely reactive — memories are only retrieved when explicitly queried. But human memory is frequently **proactive**: "Oh, this reminds me of..." "Wait, I should mention that..."
 
 **The fix — Ambient Memory Monitor:**
 
@@ -306,7 +306,7 @@ class AmbientMonitor:
         for memory in proactive_candidates:
             if memory.proactive_score(new_context) > PROACTIVE_THRESHOLD:
                 working_memory.surface_suggestion(memory)
-                # Agent sees: "[NEXUS suggests] You may want to consider: {memory}"
+                # Agent sees: "[SMRITI suggests] You may want to consider: {memory}"
     
     def on_pattern_match(self, current_trajectory: List[Action]):
         """Triggered when current actions resemble a past trajectory"""
@@ -378,7 +378,7 @@ As the Memory Palace grows, rooms may proliferate and become isolated clusters w
 
 ```
 ╔══════════════════════════════════════════════════════════════════════════╗
-║                     NEXUS v2 — CORRECTED ARCHITECTURE                   ║
+║                     SMRITI v2 — CORRECTED ARCHITECTURE                   ║
 ╠══════════════════════════════════════════════════════════════════════════╣
 ║                                                                          ║
 ║  ┌──────────────────────────────────────────────────────────────────┐    ║
@@ -474,7 +474,7 @@ As the Memory Palace grows, rooms may proliferate and become isolated clusters w
 
 ---
 
-## What NEXUS v2 Gets Right That v1 Didn't
+## What SMRITI v2 Gets Right That v1 Didn't
 
 The corrected architecture preserves the original's strengths while fixing the places where **the human metaphor was applied too literally** or **critical systems engineering was skipped**:
 
@@ -487,8 +487,8 @@ The corrected architecture preserves the original's strengths while fixing the p
 | Passive retrieval only | Proactive ambient surfacing | Human memory is associative and unbidden; AI should be too |
 | Isolated single agent | Multi-agent sharing with trust | Modern AI is multi-agent; memory should be too |
 
-> **The meta-lesson:** The best bio-inspired AI doesn't copy biology — it understands *why* a biological mechanism works and implements the *computational principle*, adapting it to the medium. Wings don't flap; airplanes generate lift differently. NEXUS v2 applies the same thinking to memory.
+> **The meta-lesson:** The best bio-inspired AI doesn't copy biology — it understands *why* a biological mechanism works and implements the *computational principle*, adapting it to the medium. Wings don't flap; airplanes generate lift differently. SMRITI v2 applies the same thinking to memory.
 
 ---
 
-*This review builds upon: [NEXUS v1 Proposal](file:///Users/shivtatva/HomeProjects/Memory/nexus_architecture_proposal.md) • [Human Memory Research](file:///Users/shivtatva/HomeProjects/Memory/sharp_memory_techniques.md) • [AI Agent Memory Landscape](file:///Users/shivtatva/HomeProjects/Memory/ai_agent_memory_systems.md)*
+*This review builds upon: [SMRITI v1 Proposal](file:///Users/shivtatva/HomeProjects/Memory/smriti_architecture_proposal.md) • [Human Memory Research](file:///Users/shivtatva/HomeProjects/Memory/sharp_memory_techniques.md) • [AI Agent Memory Landscape](file:///Users/shivtatva/HomeProjects/Memory/ai_agent_memory_systems.md)*

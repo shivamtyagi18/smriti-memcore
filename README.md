@@ -1,12 +1,12 @@
-# NEXUS Memory
+# SMRITI Memory
 
 **A neuro-inspired long-term memory architecture for AI agents.**
 
-NEXUS combines a capacity-bounded Working Memory, a graph-based Semantic Palace, and asynchronous background consolidation to give LLM agents persistent, scalable memory — without blocking real-time interactions.
+SMRITI combines a capacity-bounded Working Memory, a graph-based Semantic Palace, and asynchronous background consolidation to give LLM agents persistent, scalable memory — without blocking real-time interactions.
 
-> 📄 **Paper:** *NEXUS: A Scalable, Neuro-Inspired Architecture for Long-Term Event Memory in LLM Agents* — Shivam Tyagi, 2025 — [DOI: 10.13140/RG.2.2.25477.82407](https://doi.org/10.13140/RG.2.2.25477.82407)
+> 📄 **Paper:** *SMRITI: A Scalable, Neuro-Inspired Architecture for Long-Term Event Memory in LLM Agents* — Shivam Tyagi, 2025 — [DOI: 10.13140/RG.2.2.25477.82407](https://doi.org/10.13140/RG.2.2.25477.82407)
 
-[![PyPI](https://img.shields.io/pypi/v/nexus-memory.svg)](https://pypi.org/project/nexus-memory/)
+[![PyPI](https://img.shields.io/pypi/v/smriti-memory.svg)](https://pypi.org/project/smriti-memory/)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
@@ -42,79 +42,79 @@ NEXUS combines a capacity-bounded Working Memory, a graph-based Semantic Palace,
                  └──────────┘   └───────────────────┘
 ```
 
-**Core idea:** Inspired by human Dual-Process Theory (Daniel Kahneman's *Thinking, Fast and Slow*), NEXUS decouples memory operations into two pathways:
+**Core idea:** Inspired by human Dual-Process Theory (Daniel Kahneman's *Thinking, Fast and Slow*), SMRITI decouples memory operations into two pathways:
 - **System 1 (Fast & Heuristic):** Real-time ingestion. Routes interactions to the short-term Episode Buffer in milliseconds without blocking the agent.
 - **System 2 (Slow & Analytical):** Background consolidation. Uses LLM reasoning to chunk, organize, and abstract semantic knowledge asynchronously while the agent is idle.
 ---
 
 ## Quick Start — Claude Code (MCP)
 
-The fastest way to use NEXUS is as a persistent memory layer for [Claude Code](https://claude.ai/code). One command, and your AI remembers you across every session.
+The fastest way to use SMRITI is as a persistent memory layer for [Claude Code](https://claude.ai/code). One command, and your AI remembers you across every session.
 
 **Run the install script:**
 
 ```bash
-bash <(curl -s https://raw.githubusercontent.com/shivamtyagi18/nexus-memory/main/install_nexus_mcp.sh)
+bash <(curl -s https://raw.githubusercontent.com/shivamtyagi18/smriti-memory/main/install_smriti_mcp.sh)
 ```
 
 The script will:
-- Create a dedicated venv at `~/.nexus/venv`
-- Install `nexus-memory` into it
+- Create a dedicated venv at `~/.smriti/venv`
+- Install `smriti-memory` into it
 - Prompt for your LLM choice and API key
 - Register the MCP server in `~/.claude.json`
 - Optionally configure automatic memory hooks
 
-**Then restart Claude Code.** Verify with `/mcp` — `nexus` should appear as connected.
+**Then restart Claude Code.** Verify with `/mcp` — `smriti` should appear as connected.
 
 **Available tools (10):**
 
 | Tool | Description |
 |---|---|
-| `nexus_encode` | Store information in long-term memory |
-| `nexus_recall` | Retrieve memories by natural-language query |
-| `nexus_get_context` | Inject working memory into the current prompt |
-| `nexus_how_well_do_i_know` | Confidence check on a topic |
-| `nexus_knowledge_gaps` | List topics NEXUS knows it doesn't know |
-| `nexus_pin` | Mark a memory as permanent (never decayed) |
-| `nexus_forget` | Archive a memory |
-| `nexus_consolidate` | Run a consolidation cycle |
-| `nexus_stats` | System-wide statistics |
-| `nexus_get_suggestions` | Proactive insights from background consolidation |
+| `smriti_encode` | Store information in long-term memory |
+| `smriti_recall` | Retrieve memories by natural-language query |
+| `smriti_get_context` | Inject working memory into the current prompt |
+| `smriti_how_well_do_i_know` | Confidence check on a topic |
+| `smriti_knowledge_gaps` | List topics SMRITI knows it doesn't know |
+| `smriti_pin` | Mark a memory as permanent (never decayed) |
+| `smriti_forget` | Archive a memory |
+| `smriti_consolidate` | Run a consolidation cycle |
+| `smriti_stats` | System-wide statistics |
+| `smriti_get_suggestions` | Proactive insights from background consolidation |
 
 **LLM options** — set during install or via environment variables:
 
 | Model | Provider | Requires |
 |---|---|---|
 | `mistral` (default) | Local Ollama | `ollama pull mistral` |
-| `claude-*` | Anthropic | `NEXUS_LLM_API_KEY` |
-| `gpt-*` | OpenAI | `NEXUS_LLM_API_KEY` |
-| `gemini*` | Google | `NEXUS_LLM_API_KEY` |
+| `claude-*` | Anthropic | `SMRITI_LLM_API_KEY` |
+| `gpt-*` | OpenAI | `SMRITI_LLM_API_KEY` |
+| `gemini*` | Google | `SMRITI_LLM_API_KEY` |
 
 ---
 
 ## Installation (Python Library)
 
 ```bash
-pip install nexus-memory
+pip install smriti-memory
 ```
 
 With optional **FAISS** accelerated vector search:
 
 ```bash
-pip install nexus-memory[faiss]
+pip install smriti-memory[faiss]
 ```
 
 Or install from source:
 
 ```bash
-git clone https://github.com/shivamtyagi18/nexus-memory.git
-cd nexus-memory
+git clone https://github.com/shivamtyagi18/smriti-memory.git
+cd smriti-memory
 pip install -e .
 ```
 
 ### Prerequisites
 
-NEXUS uses an LLM for reasoning tasks (consolidation, reflection, skill extraction). By default it connects to a local [Ollama](https://ollama.ai) instance:
+SMRITI uses an LLM for reasoning tasks (consolidation, reflection, skill extraction). By default it connects to a local [Ollama](https://ollama.ai) instance:
 
 ```bash
 ollama pull mistral
@@ -126,35 +126,35 @@ Alternatively, you can use **OpenAI**, **Anthropic**, or **Google Gemini** — s
 
 ## Using Cloud LLM Providers
 
-NEXUS is **provider-agnostic**. Just change the `llm_model` and pass your API key:
+SMRITI is **provider-agnostic**. Just change the `llm_model` and pass your API key:
 
 ```python
-from nexus import NEXUS, NexusConfig
+from smriti import SMRITI, SmritiConfig
 
 # ── OpenAI ──────────────────────────────────────────────
-config = NexusConfig(
+config = SmritiConfig(
     llm_model="gpt-4o",
     openai_api_key="sk-...",
 )
 
 # ── Anthropic ───────────────────────────────────────────
-config = NexusConfig(
+config = SmritiConfig(
     llm_model="claude-3-5-sonnet-20241022",
     anthropic_api_key="sk-ant-...",
 )
 
 # ── Google Gemini ───────────────────────────────────────
-config = NexusConfig(
+config = SmritiConfig(
     llm_model="gemini-1.5-flash",
     gemini_api_key="AIza...",
 )
 
 # ── Local Ollama (default) ──────────────────────────────
-config = NexusConfig(
+config = SmritiConfig(
     llm_model="mistral",  # or llama3, codellama, phi3, etc.
 )
 
-memory = NEXUS(config=config)
+memory = SMRITI(config=config)
 ```
 
 Routing is automatic based on the model name prefix: `gpt-*` → OpenAI, `claude*` → Anthropic, `gemini*` → Gemini, everything else → Ollama.
@@ -164,14 +164,14 @@ Routing is automatic based on the model name prefix: `gpt-*` → OpenAI, `claude
 ## Quick Start
 
 ```python
-from nexus import NEXUS, NexusConfig
+from smriti import SMRITI, SmritiConfig
 
 # Initialize
-config = NexusConfig(
+config = SmritiConfig(
     storage_path="./my_agent_memory",
     llm_model="mistral",
 )
-memory = NEXUS(config=config)
+memory = SMRITI(config=config)
 
 # Encode information
 memory.encode("User prefers Python for backend development.")
@@ -194,26 +194,26 @@ memory.save()
 ```
 
 ### Framework Integrations
-NEXUS can be used natively inside standard agent frameworks. 
+SMRITI can be used natively inside standard agent frameworks. 
 
 #### LangChain
-Use `NexusLangChainMemory` to replace `ConversationBufferMemory`. This gives your agent the cost-savings of a capacity-bounded Working Memory while asynchronously archiving the conversation into the Semantic Palace.
+Use `SmritiLangChainMemory` to replace `ConversationBufferMemory`. This gives your agent the cost-savings of a capacity-bounded Working Memory while asynchronously archiving the conversation into the Semantic Palace.
 
 ```python
 from langchain.chains import ConversationChain
-from nexus.integrations.langchain_memory import NexusLangChainMemory
-from nexus import NEXUS
+from smriti.integrations.langchain_memory import SmritiLangChainMemory
+from smriti import SMRITI
 
-# 1. Initialize NEXUS
-nexus_engine = NEXUS(storage_path="./langchain_nexus_db")
+# 1. Initialize SMRITI
+smriti_engine = SMRITI(storage_path="./langchain_smriti_db")
 
 # 2. Wrap it for LangChain
-nexus_memory = NexusLangChainMemory(nexus_client=nexus_engine, top_k=3)
+smriti_memory = SmritiLangChainMemory(smriti_client=smriti_engine, top_k=3)
 
 # 3. Plug it into standard chains
 conversation = ConversationChain(
     llm=my_llm,
-    memory=nexus_memory,
+    memory=smriti_memory,
 )
 
 conversation.predict(input="I prefer using PyTorch.")
@@ -247,9 +247,9 @@ See [Quick Start — Claude Code (MCP)](#quick-start--claude-code-mcp) above for
 All parameters are optional and have sensible defaults:
 
 ```python
-from nexus import NexusConfig
+from smriti import SmritiConfig
 
-config = NexusConfig(
+config = SmritiConfig(
     # Working Memory
     working_memory_slots=7,          # Miller's Law: 7 ± 2
 
@@ -274,7 +274,7 @@ config = NexusConfig(
     ollama_base_url="http://localhost:11434",
 
     # Storage
-    storage_path="./nexus_data",
+    storage_path="./smriti_data",
 )
 ```
 
@@ -295,17 +295,17 @@ See [CHANGELOG.md](CHANGELOG.md) for full details.
 
 ### LoCoMo (Multi-System Comparison)
 
-NEXUS was benchmarked against four baseline architectures on the [LoCoMo](https://github.com/snap-research/locomo) long-sequence dataset (28 dialog turns, 15 evaluation questions, consolidation enabled):
+SMRITI was benchmarked against four baseline architectures on the [LoCoMo](https://github.com/snap-research/locomo) long-sequence dataset (28 dialog turns, 15 evaluation questions, consolidation enabled):
 
 | System | F1 Score | Latency | Tokens/Query | Consolidation |
 |---|---|---|---|---|
 | FullContext | **0.345** | 1147ms | 550 | — |
 | MemGPT-style | 0.334 | 1397ms | 478 | — |
 | NaiveRAG | 0.312 | 1387ms | 145 | — |
-| **NEXUS v2** | 0.279 | 1317ms | **146** | 41.2s (async) |
+| **SMRITI v2** | 0.279 | 1317ms | **146** | 41.2s (async) |
 | Mem0-style | 0.235 | 1088ms | 106 | — |
 
-*Results with GPT-4o-mini. NEXUS consolidation runs asynchronously and does not block queries.*
+*Results with GPT-4o-mini. SMRITI consolidation runs asynchronously and does not block queries.*
 
 ### Local Model Comparison (v1.0.0)
 
@@ -322,18 +322,18 @@ All runs use the fixed consolidation pipeline with heuristic scoring:
 
 ### LongMemEval (Long-Term Interactive Memory)
 
-NEXUS integrates an evaluation harness for the [LongMemEval](https://github.com/xiaowu0162/LongMemEval) benchmark to test retrieval over 50+ chat sessions:
+SMRITI integrates an evaluation harness for the [LongMemEval](https://github.com/xiaowu0162/LongMemEval) benchmark to test retrieval over 50+ chat sessions:
 
 | System Configuration | Exact Match Accuracy | Average Query Latency |
 |---|---|---|
 | **Baseline (Full Context)** | 100.0% | 11.98s |
-| **NEXUS Dual-Process** | **80.0%** | **0.98s** |
+| **SMRITI Dual-Process** | **80.0%** | **0.98s** |
 
-*NEXUS restricts the LLM context to the 5 most relevant memories, resulting in a **>12× latency reduction** compared to context-stuffing.*
+*SMRITI restricts the LLM context to the 5 most relevant memories, resulting in a **>12× latency reduction** compared to context-stuffing.*
 
 ### Vector Search Backend
 
-NEXUS supports two vector search backends. FAISS is auto-detected when installed:
+SMRITI supports two vector search backends. FAISS is auto-detected when installed:
 
 | Backend | 1K vectors | 10K vectors | 100K vectors | Memory (100K) |
 |---|---|---|---|---|
@@ -348,11 +348,11 @@ At scale, FAISS is **1.2× faster** with **150,000× less memory**.
 pip install -e ".[benchmarks]"
 
 # Multi-system comparison (requires API key)
-python benchmarks/run_benchmark.py --model gpt-4o-mini --systems nexus --consolidate --dataset locomo
+python benchmarks/run_benchmark.py --model gpt-4o-mini --systems smriti --consolidate --dataset locomo
 
 # Local model comparison (requires Ollama)
-python benchmarks/run_benchmark.py --model mistral --systems nexus --consolidate --dataset locomo
-python benchmarks/run_benchmark.py --model codellama --systems nexus --consolidate --dataset locomo
+python benchmarks/run_benchmark.py --model mistral --systems smriti --consolidate --dataset locomo
+python benchmarks/run_benchmark.py --model codellama --systems smriti --consolidate --dataset locomo
 
 # Vector backend comparison
 python benchmarks/vector_benchmark.py
@@ -363,11 +363,11 @@ python benchmarks/vector_benchmark.py
 ## Project Structure
 
 ```
-nexus-memory/
-├── nexus/                 # Core library
+smriti-memory/
+├── smriti/                 # Core library
 │   ├── __init__.py
-│   ├── core.py            # NEXUS orchestrator
-│   ├── models.py          # Data models & NexusConfig
+│   ├── core.py            # SMRITI orchestrator
+│   ├── models.py          # Data models & SmritiConfig
 │   ├── palace.py          # Semantic Palace graph
 │   ├── episode_buffer.py  # Append-only temporal log
 │   ├── working_memory.py  # Capacity-bounded priority queue
@@ -381,7 +381,7 @@ nexus-memory/
 │   └── integrations/      # Framework adapters
 │       ├── langchain_memory.py  # LangChain BaseMemory component
 │       └── mcp_server.py        # Claude Code MCP server (10 tools)
-├── install_nexus_mcp.sh   # One-command Claude Code setup
+├── install_smriti_mcp.sh   # One-command Claude Code setup
 ├── tests/                 # 190 tests across 14 files
 ├── baselines/             # Baseline implementations for comparison
 ├── benchmarks/            # Benchmark harness & scripts
@@ -398,11 +398,11 @@ nexus-memory/
 
 ## Citation
 
-If you use NEXUS in your research, please cite:
+If you use SMRITI in your research, please cite:
 
 ```bibtex
-@article{tyagi2025nexus,
-  title={NEXUS: A Scalable, Neuro-Inspired Architecture for Long-Term Event Memory in LLM Agents},
+@article{tyagi2025smriti,
+  title={SMRITI: A Scalable, Neuro-Inspired Architecture for Long-Term Event Memory in LLM Agents},
   author={Tyagi, Shivam},
   year={2025},
   doi={10.13140/RG.2.2.25477.82407}

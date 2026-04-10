@@ -1,5 +1,5 @@
 """
-Shared test fixtures for the NEXUS test suite.
+Shared test fixtures for the SMRITI test suite.
 Provides mock LLM, temp-directory stores, and pre-built objects.
 """
 
@@ -10,15 +10,15 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 
-from nexus.models import (
-    NexusConfig, Memory, Episode, SalienceScore, MemorySource, Modality,
+from smriti.models import (
+    SmritiConfig, Memory, Episode, SalienceScore, MemorySource, Modality,
 )
-from nexus.vector_store import VectorStore
-from nexus.episode_buffer import EpisodeBuffer
-from nexus.palace import SemanticPalace
-from nexus.working_memory import WorkingMemory
-from nexus.llm_interface import LLMInterface, LLMResponse
-from nexus.metrics import NexusMetrics
+from smriti.vector_store import VectorStore
+from smriti.episode_buffer import EpisodeBuffer
+from smriti.palace import SemanticPalace
+from smriti.working_memory import WorkingMemory
+from smriti.llm_interface import LLMInterface, LLMResponse
+from smriti.metrics import SmritiMetrics
 
 
 # ── Temp Directories ────────────────────────────────────
@@ -119,8 +119,8 @@ def working_memory():
 
 @pytest.fixture
 def metrics():
-    """Fresh NexusMetrics instance."""
-    return NexusMetrics()
+    """Fresh SmritiMetrics instance."""
+    return SmritiMetrics()
 
 
 # ── Helper Factories ────────────────────────────────────
@@ -160,5 +160,5 @@ def make_episode():
 
 @pytest.fixture
 def config(tmp_dir):
-    """NexusConfig with temp storage path."""
-    return NexusConfig(storage_path=os.path.join(tmp_dir, "nexus_db"))
+    """SmritiConfig with temp storage path."""
+    return SmritiConfig(storage_path=os.path.join(tmp_dir, "smriti_db"))

@@ -122,7 +122,7 @@ def main():
     top_k = 10
 
     print("=" * 80)
-    print("NEXUS Vector Search Benchmark — NumPy vs FAISS")
+    print("SMRITI Vector Search Benchmark — NumPy vs FAISS")
     print(f"Dimension: {dim}, Queries: {n_queries}, Top-K: {top_k}")
     print("=" * 80)
     print()

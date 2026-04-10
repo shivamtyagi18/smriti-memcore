@@ -1,5 +1,5 @@
 """
-NEXUS v2 — Semantic Palace.
+SMRITI v2 — Semantic Palace.
 Graph-based semantic clustering with contextual priming and multi-hop
 associative retrieval. NOT spatial simulation — captures the computational
 mechanism (contextual priming + typed associative traversal).
@@ -17,8 +17,8 @@ from typing import Dict, List, Optional, Set, Tuple
 
 import numpy as np
 
-from nexus.models import Memory, MemoryStatus
-from nexus.vector_store import VectorStore
+from smriti.models import Memory, MemoryStatus
+from smriti.vector_store import VectorStore
 
 logger = logging.getLogger(__name__)
 
@@ -442,7 +442,7 @@ class SemanticPalace:
 
             # Reconstruct memories
             for mid, mdata in state.get("memories", {}).items():
-                from nexus.models import MemorySource, Modality, SalienceScore
+                from smriti.models import MemorySource, Modality, SalienceScore
                 salience_data = mdata.get("salience", {})
                 memory = Memory(
                     id=mid,

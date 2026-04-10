@@ -1,6 +1,6 @@
 """
-NEXUS v2 — Core Integration.
-The main NEXUS class that orchestrates all components into a unified API.
+SMRITI v2 — Core Integration.
+The main SMRITI class that orchestrates all components into a unified API.
 """
 
 from __future__ import annotations
@@ -11,25 +11,25 @@ import os
 import time
 from typing import Any, Dict, List, Optional
 
-from nexus.models import (
+from smriti.models import (
     ConfidenceLevel, DecisionType, Episode, Memory, MemorySource,
-    MemoryStatus, Modality, NexusConfig, SalienceScore,
+    MemoryStatus, Modality, SmritiConfig, SalienceScore,
 )
-from nexus.llm_interface import LLMInterface
-from nexus.vector_store import VectorStore
-from nexus.episode_buffer import EpisodeBuffer
-from nexus.palace import SemanticPalace
-from nexus.working_memory import WorkingMemory
-from nexus.attention_gate import AttentionGate
-from nexus.retrieval import RetrievalEngine
-from nexus.consolidation import ConsolidationEngine
-from nexus.meta_memory import MetaMemory
-from nexus.metrics import NexusMetrics
+from smriti.llm_interface import LLMInterface
+from smriti.vector_store import VectorStore
+from smriti.episode_buffer import EpisodeBuffer
+from smriti.palace import SemanticPalace
+from smriti.working_memory import WorkingMemory
+from smriti.attention_gate import AttentionGate
+from smriti.retrieval import RetrievalEngine
+from smriti.consolidation import ConsolidationEngine
+from smriti.meta_memory import MetaMemory
+from smriti.metrics import SmritiMetrics
 
 logger = logging.getLogger(__name__)
 
 
-class NEXUS:
+class SMRITI:
     """
     Neuro-Inspired EXperience-Unified System.
     
@@ -37,21 +37,21 @@ class NEXUS:
     principles behind human memory champion techniques into AI design.
     
     Usage:
-        nexus = NEXUS()
-        nexus.encode("User prefers Python for backend development")
-        memories = nexus.recall("What language does the user prefer?")
-        confidence = nexus.how_well_do_i_know("programming languages")
-        nexus.consolidate()
+        smriti = SMRITI()
+        smriti.encode("User prefers Python for backend development")
+        memories = smriti.recall("What language does the user prefer?")
+        confidence = smriti.how_well_do_i_know("programming languages")
+        smriti.consolidate()
     """
 
-    def __init__(self, config: Optional[NexusConfig] = None):
-        self.config = config or NexusConfig()
+    def __init__(self, config: Optional[SmritiConfig] = None):
+        self.config = config or SmritiConfig()
 
         # Create storage directories
         os.makedirs(self.config.storage_path, exist_ok=True)
 
         # Metrics / observability
-        self._metrics = NexusMetrics()
+        self._metrics = SmritiMetrics()
 
         # Initialize components
         self.llm = LLMInterface(
@@ -110,7 +110,7 @@ class NEXUS:
         atexit.register(self._atexit_save)
         self._closed = False
 
-        logger.info("NEXUS v2 initialized")
+        logger.info("SMRITI v2 initialized")
 
     # ── Core API ─────────────────────────────────────────
 
@@ -123,7 +123,7 @@ class NEXUS:
         use_llm: bool = True,
     ) -> Optional[str]:
         """
-        Encode new information into NEXUS.
+        Encode new information into SMRITI.
         
         Pipeline: Attention Gate → Episode Buffer → Palace placement
         
@@ -233,7 +233,7 @@ class NEXUS:
         If depth is None, the scheduler decides automatically.
         Otherwise, force a specific depth: 'full', 'light', or 'defer'.
         """
-        from nexus.models import ConsolidationDepth
+        from smriti.models import ConsolidationDepth
 
         if isinstance(depth, str):
             depth = ConsolidationDepth(depth)
@@ -372,7 +372,7 @@ class NEXUS:
         self.palace.save()
         self.episode_buffer.save()
         self.vector_store.save()
-        logger.info("NEXUS state saved")
+        logger.info("SMRITI state saved")
 
     def close(self):
         """Save state and release resources. Safe to call multiple times."""
@@ -389,7 +389,7 @@ class NEXUS:
             atexit.unregister(self._atexit_save)
         except Exception:
             pass
-        logger.info("NEXUS closed")
+        logger.info("SMRITI closed")
 
     def _atexit_save(self):
         """Best-effort save on unexpected exit."""
@@ -411,7 +411,7 @@ class NEXUS:
     def __repr__(self) -> str:
         h = self.palace.health()
         return (
-            f"NEXUS(memories={h.get('memory_count', 0)}, "
+            f"SMRITI(memories={h.get('memory_count', 0)}, "
             f"rooms={h.get('room_count', 0)}, "
             f"episodes={self.episode_buffer.count})"
         )

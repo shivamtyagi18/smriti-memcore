@@ -1,21 +1,21 @@
 """
-NEXUS Memory — Quickstart Example
+SMRITI Memory — Quickstart Example
 
 Prerequisites:
-    1. pip install nexus-memory
+    1. pip install smriti-memory
     2. Ollama running locally:  ollama serve
     3. Pull a model:           ollama pull mistral
 """
 
-from nexus import NEXUS, NexusConfig
+from smriti import SMRITI, SmritiConfig
 
 # ── 1. Initialize with custom config (all fields are optional) ──────────
-config = NexusConfig(
+config = SmritiConfig(
     storage_path="./my_agent_memory",   # where memories persist on disk
     llm_model="mistral",                # any Ollama model name
     working_memory_slots=7,             # Miller's Law: 7 ± 2
 )
-agent_memory = NEXUS(config=config)
+agent_memory = SMRITI(config=config)
 
 # ── 2. Encode memories ──────────────────────────────────────────────────
 agent_memory.encode("User's name is Alice and she is a software engineer.")

@@ -3,7 +3,7 @@
   "timestamp": "2026-02-26T13:04:14.600928",
   "total_time_seconds": 571.5519318580627,
   "systems": {
-    "NEXUS_v2": {
+    "SMRITI_v2": {
       "ingest_time_seconds": 10.517223834991455,
       "messages_ingested": 28,
       "questions": [
@@ -344,7 +344,7 @@
         }
       },
       "system_stats": {
-        "name": "NEXUS_v2",
+        "name": "SMRITI_v2",
         "messages_ingested": 28,
         "queries_answered": 15,
         "avg_latency_ms": 6072.618277867635,
@@ -1794,7 +1794,7 @@
     }
   },
   "comparison": {
-    "NEXUS_v2": {
+    "SMRITI_v2": {
       "f1_mean": 0.16935051726336886,
       "latency_mean_ms": 6072.618277867635,
       "tokens_mean": 39.06666666666667

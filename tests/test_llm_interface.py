@@ -1,8 +1,8 @@
-"""Tests for nexus.llm_interface — error handling, retries, API key checks."""
+"""Tests for smriti.llm_interface — error handling, retries, API key checks."""
 
 import pytest
-from nexus.llm_interface import LLMInterface, LLMResponse
-from nexus.metrics import NexusMetrics
+from smriti.llm_interface import LLMInterface, LLMResponse
+from smriti.metrics import SmritiMetrics
 
 
 class TestLLMResponse:
@@ -66,7 +66,7 @@ class TestGenerateJSON:
 
 class TestMetricsIntegration:
     def test_metrics_tracked(self):
-        metrics = NexusMetrics()
+        metrics = SmritiMetrics()
         llm = LLMInterface(default_model="gpt-4", metrics=metrics)
         # Call will fail (no API key) but should still track metrics
         llm.generate("test")

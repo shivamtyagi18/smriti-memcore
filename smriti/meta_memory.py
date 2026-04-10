@@ -1,5 +1,5 @@
 """
-NEXUS v2 — Meta-Memory.
+SMRITI v2 — Meta-Memory.
 Self-awareness layer: confidence mapping, knowledge gap tracking,
 and ask-vs-recall decision engine. Prevents hallucination by knowing
 what the agent knows and doesn't know.
@@ -12,8 +12,8 @@ from collections import deque
 from datetime import datetime
 from typing import Dict, List, Optional
 
-from nexus.models import ConfidenceLevel, DecisionType, MemoryStatus
-from nexus.palace import SemanticPalace
+from smriti.models import ConfidenceLevel, DecisionType, MemoryStatus
+from smriti.palace import SemanticPalace
 
 logger = logging.getLogger(__name__)
 

@@ -1,10 +1,10 @@
-"""Tests for nexus.vector_store — embedding, storage, search, persistence."""
+"""Tests for smriti.vector_store — embedding, storage, search, persistence."""
 
 import os
 import numpy as np
 import pytest
 
-from nexus.vector_store import VectorStore
+from smriti.vector_store import VectorStore
 
 
 class TestEmbedding:

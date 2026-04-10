@@ -1,5 +1,5 @@
 """
-NEXUS v2 — Vector Store.
+SMRITI v2 — Vector Store.
 Embedding generation + similarity search abstraction.
 Uses sentence-transformers for embeddings, with FAISS (auto-detected) or NumPy for search.
 """

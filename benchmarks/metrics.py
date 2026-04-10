@@ -7,7 +7,7 @@ from __future__ import annotations
 import re
 from typing import Any, Dict, List, Optional
 
-from nexus.llm_interface import LLMInterface
+from smriti.llm_interface import LLMInterface
 
 
 def f1_score(prediction: str, reference: str) -> float:

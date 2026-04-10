@@ -1,11 +1,11 @@
-"""Tests for nexus.models — data models, enums, config validation."""
+"""Tests for smriti.models — data models, enums, config validation."""
 
 import os
 import pytest
 from datetime import datetime, timedelta
 
-from nexus.models import (
-    NexusConfig, Memory, Episode, SalienceScore, MemorySource,
+from smriti.models import (
+    SmritiConfig, Memory, Episode, SalienceScore, MemorySource,
     MemoryStatus, Modality, ConfidenceLevel, DecisionType,
     ConsolidationDepth, MemoryTombstone, Skill,
 )
@@ -94,38 +94,38 @@ class TestMemory:
             assert field in d, f"Missing field: {field}"
 
 
-class TestNexusConfig:
-    """Tests for NexusConfig validation."""
+class TestSmritiConfig:
+    """Tests for SmritiConfig validation."""
 
     def test_default_config(self):
-        c = NexusConfig()
+        c = SmritiConfig()
         assert c.decay_rate > 0
         assert c.working_memory_slots > 0
 
     def test_decay_rate_zero_rejected(self):
         with pytest.raises(ValueError, match="decay_rate"):
-            NexusConfig(decay_rate=0)
+            SmritiConfig(decay_rate=0)
 
     def test_decay_rate_negative_rejected(self):
         with pytest.raises(ValueError, match="decay_rate"):
-            NexusConfig(decay_rate=-0.5)
+            SmritiConfig(decay_rate=-0.5)
 
     def test_decay_rate_above_one_rejected(self):
         with pytest.raises(ValueError, match="decay_rate"):
-            NexusConfig(decay_rate=1.5)
+            SmritiConfig(decay_rate=1.5)
 
     def test_working_memory_slots_zero_rejected(self):
         with pytest.raises(ValueError, match="working_memory_slots"):
-            NexusConfig(working_memory_slots=0)
+            SmritiConfig(working_memory_slots=0)
 
     def test_api_key_from_env(self, monkeypatch):
         monkeypatch.setenv("OPENAI_API_KEY", "test-key-123")
-        c = NexusConfig()
+        c = SmritiConfig()
         assert c.openai_api_key == "test-key-123"
 
     def test_explicit_api_key_over_env(self, monkeypatch):
         monkeypatch.setenv("OPENAI_API_KEY", "env-key")
-        c = NexusConfig(openai_api_key="explicit-key")
+        c = SmritiConfig(openai_api_key="explicit-key")
         assert c.openai_api_key == "explicit-key"
 
 

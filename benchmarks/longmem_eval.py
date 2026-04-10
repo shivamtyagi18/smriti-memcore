@@ -12,9 +12,9 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_core.messages import HumanMessage, AIMessage
 
-# NEXUS imports
-from nexus.core import NEXUS, NexusConfig
-from nexus.integrations.langchain_memory import NexusLangChainHistory
+# SMRITI imports
+from smriti.core import SMRITI, SmritiConfig
+from smriti.integrations.langchain_memory import SmritiLangChainHistory
 
 # Simple exact/fuzzy match for evaluation
 def compute_accuracy(prediction: str, ground_truth: str) -> float:
@@ -30,31 +30,31 @@ def compute_accuracy(prediction: str, ground_truth: str) -> float:
     return 0.0
 
 from datetime import datetime
-from nexus.models import Episode, SalienceScore, MemorySource
+from smriti.models import Episode, SalienceScore, MemorySource
 
-def process_case_nexus(test_case: Dict[str, Any], temp_dir: str) -> Dict[str, Any]:
-    """Runs a single LongMemEval case through a NEXUS-augmented LangChain agent."""
+def process_case_smriti(test_case: Dict[str, Any], temp_dir: str) -> Dict[str, Any]:
+    """Runs a single LongMemEval case through a SMRITI-augmented LangChain agent."""
     
     import os
     from datetime import timedelta
     
-    # 1. Initialize NEXUS in a temporary isolation directory so nothing leaks between cases
-    db_path = os.path.join(temp_dir, f"nexus_db_{test_case['question_id']}")
-    config = NexusConfig(
+    # 1. Initialize SMRITI in a temporary isolation directory so nothing leaks between cases
+    db_path = os.path.join(temp_dir, f"smriti_db_{test_case['question_id']}")
+    config = SmritiConfig(
         storage_path=db_path,
         llm_model="gpt-4o-mini",
         openai_api_key=os.environ.get("OPENAI_API_KEY")
     )
-    nexus_engine = NEXUS(config=config)
+    smriti_engine = SMRITI(config=config)
     
     # 2. Setup LangChain Environment
-    nexus_history = NexusLangChainHistory(nexus_client=nexus_engine, session_id="eval_session", top_k=5)
+    smriti_history = SmritiLangChainHistory(smriti_client=smriti_engine, session_id="eval_session", top_k=5)
     
     # 3. Ingest the haystack sessions directly into LangChain history to emulate an integration
-    # (Since we just want to load the history into NEXUS, we can push it onto the history object)
+    # (Since we just want to load the history into SMRITI, we can push it onto the history object)
     sessions = test_case.get('haystack_sessions', [])
     
-    print(f"[{test_case['question_id']}] Ingesting {len(sessions)} chat sessions into NEXUS...")
+    print(f"[{test_case['question_id']}] Ingesting {len(sessions)} chat sessions into SMRITI...")
     base_time = datetime.now() - timedelta(days=len(sessions))
     
     for i, session in enumerate(sessions):
@@ -77,14 +77,14 @@ def process_case_nexus(test_case: Dict[str, Any], temp_dir: str) -> Dict[str, An
                 salience=SalienceScore(surprise=0.8, relevance=0.8, emotional=0.5, novelty=0.8, utility=0.8),
                 source=MemorySource.DIRECT
             )
-            nexus_engine.episode_buffer.add(ep)
+            smriti_engine.episode_buffer.add(ep)
             
         if (i + 1) % 10 == 0:
             print(f"  Ingested {i+1}/{len(sessions)} sessions into episodic buffer...")
                 
     # Consolidate ONCE at the end of all history to build the graph
     print("  Triggering single batch consolidation...")
-    nexus_engine.consolidate(depth="full")
+    smriti_engine.consolidate(depth="full")
         
     # 4. Create the Chat Chain to answer the final question
     llm = ChatOpenAI(temperature=0.0, model="gpt-4o-mini") # deterministic evaluation
@@ -96,8 +96,8 @@ def process_case_nexus(test_case: Dict[str, Any], temp_dir: str) -> Dict[str, An
     start_time = time.time()
     
     # Dual-Process Fetch using the actual question string
-    memories = nexus_engine.recall(question, top_k=5)
-    episodes = nexus_engine.episode_buffer.search_semantic(question, top_k=5)
+    memories = smriti_engine.recall(question, top_k=5)
+    episodes = smriti_engine.episode_buffer.search_semantic(question, top_k=5)
     
     context_blocks = []
     if memories:
@@ -124,7 +124,7 @@ def process_case_nexus(test_case: Dict[str, Any], temp_dir: str) -> Dict[str, An
     
     print(f"  Q: {question}")
     print(f"  Expected: {ground_truth}")
-    print(f"  NEXUS Answer: {prediction}")
+    print(f"  SMRITI Answer: {prediction}")
     print(f"  Accuracy: {accuracy} (latency: {latency:.2f}s)\n")
     
     return {
@@ -208,7 +208,7 @@ def main():
     parser = argparse.ArgumentParser(description="Run LongMemEval Benchmark")
     parser.add_argument("--dataset", type=str, default="data/longmemeval/longmemeval_s_cleaned.json", help="Path to json dataset")
     parser.add_argument("--limit", type=int, default=5, help="Number of cases to evaluate (full set is 500)")
-    parser.add_argument("--baseline", action="store_true", help="Run with standard ConversationBufferMemory instead of NEXUS")
+    parser.add_argument("--baseline", action="store_true", help="Run with standard ConversationBufferMemory instead of SMRITI")
     args = parser.parse_args()
     
     print(f"Loading dataset from {args.dataset}...")
@@ -232,7 +232,7 @@ def main():
                 res = process_case_baseline(case)
                 results.append(res)
             else:
-                res = process_case_nexus(case, temp_dir)
+                res = process_case_smriti(case, temp_dir)
                 results.append(res)
                 
     # Aggregate and print results
@@ -241,7 +241,7 @@ def main():
     
     print("=" * 40)
     print(f"LONGMEMEVAL EVALUATION COMPLETE")
-    print(f"Method: {'Baseline' if args.baseline else 'NEXUS Dual-Process'}")
+    print(f"Method: {'Baseline' if args.baseline else 'SMRITI Dual-Process'}")
     print(f"Cases Evaluated: {len(results)}")
     print(f"Overall Accuracy: {total_acc * 100:.1f}%")
     print(f"Average Inquiry Latency: {avg_latency:.2f}s")
@@ -253,7 +253,7 @@ def main():
     with open(output_file, "w") as f:
         json.dump({
             "summary": {
-                "method": "Baseline" if args.baseline else "NEXUS",
+                "method": "Baseline" if args.baseline else "SMRITI",
                 "total_cases": len(results),
                 "accuracy": total_acc,
                 "latency": avg_latency

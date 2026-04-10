@@ -1,6 +1,6 @@
 """
-NEXUS adapter for the benchmark harness.
-Wraps the NEXUS core into the BaseMemorySystem interface.
+SMRITI adapter for the benchmark harness.
+Wraps the SMRITI core into the BaseMemorySystem interface.
 """
 
 from __future__ import annotations
@@ -12,41 +12,41 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from typing import Dict, List, Optional
 
 from baselines.base import BaseMemorySystem, MemoryResponse
-from nexus.core import NEXUS
-from nexus.models import MemorySource, NexusConfig
-from nexus.llm_interface import LLMInterface
+from smriti.core import SMRITI
+from smriti.models import MemorySource, SmritiConfig
+from smriti.llm_interface import LLMInterface
 
 
-class NexusAdapter(BaseMemorySystem):
-    """Wraps NEXUS v2 into the BaseMemorySystem benchmark interface."""
+class SmritiAdapter(BaseMemorySystem):
+    """Wraps SMRITI v2 into the BaseMemorySystem benchmark interface."""
 
-    def __init__(self, llm: LLMInterface, config: Optional[NexusConfig] = None):
-        super().__init__("NEXUS_v2", llm)
-        self.config = config or NexusConfig()
-        self.nexus = NEXUS(self.config)
-        # Override NEXUS's internal LLM with the benchmark's LLM
+    def __init__(self, llm: LLMInterface, config: Optional[SmritiConfig] = None):
+        super().__init__("SMRITI_v2", llm)
+        self.config = config or SmritiConfig()
+        self.smriti = SMRITI(self.config)
+        # Override SMRITI's internal LLM with the benchmark's LLM
         # so queries and consolidation use the same model (e.g. gpt-4o-mini)
-        self.nexus.llm = llm
-        self.nexus.attention_gate.llm = llm
-        self.nexus.consolidation_engine.llm = llm
+        self.smriti.llm = llm
+        self.smriti.attention_gate.llm = llm
+        self.smriti.consolidation_engine.llm = llm
 
     def ingest(self, message: str, role: str = "user", metadata: Optional[Dict] = None):
         source = MemorySource.USER_STATED if role == "user" else MemorySource.DIRECT
         # Use fast heuristic scoring for benchmark speed
         # Temporarily disable auto-consolidation during batch ingest
-        original_trigger = self.nexus.config.episode_buffer_trigger
-        self.nexus.config.episode_buffer_trigger = 99999  # Prevent mid-ingest consolidation
-        self.nexus.encode(message, source=source, use_llm=False)
-        self.nexus.config.episode_buffer_trigger = original_trigger
+        original_trigger = self.smriti.config.episode_buffer_trigger
+        self.smriti.config.episode_buffer_trigger = 99999  # Prevent mid-ingest consolidation
+        self.smriti.encode(message, source=source, use_llm=False)
+        self.smriti.config.episode_buffer_trigger = original_trigger
         self._ingest_count += 1
 
     def query(self, question: str, context: str = "") -> MemoryResponse:
         def _do_query(q, ctx):
             # Recall memories
-            memories = self.nexus.recall(q, context=ctx, top_k=5)
+            memories = self.smriti.recall(q, context=ctx, top_k=5)
 
             # Build prompt with retrieved memories and confidence
-            confidence = self.nexus.how_well_do_i_know(q)
+            confidence = self.smriti.how_well_do_i_know(q)
             memory_texts = [m.content for m in memories]
             memory_str = "\n".join(f"- {t}" for t in memory_texts) if memory_texts else "No relevant memories."
 
@@ -62,7 +62,7 @@ Memories:
 Question: {question}
 Answer:"""
 
-            response = self.nexus.llm.generate(prompt)
+            response = self.smriti.llm.generate(prompt)
             return MemoryResponse(
                 answer=response.text.strip(),
                 memories_used=memory_texts,
@@ -77,21 +77,21 @@ Answer:"""
         self._ingest_count = 0
         self._query_count = 0
         self._total_latency_ms = 0.0
-        # Re-initialize NEXUS
+        # Re-initialize SMRITI
         if os.path.exists(self.config.storage_path):
             shutil.rmtree(self.config.storage_path, ignore_errors=True)
-        self.nexus = NEXUS(self.config)
+        self.smriti = SMRITI(self.config)
         # Re-inject benchmark LLM
-        self.nexus.llm = self.llm
-        self.nexus.attention_gate.llm = self.llm
-        self.nexus.consolidation_engine.llm = self.llm
+        self.smriti.llm = self.llm
+        self.smriti.attention_gate.llm = self.llm
+        self.smriti.consolidation_engine.llm = self.llm
 
     def run_consolidation(self):
-        """Run FULL consolidation on the NEXUS memory system."""
-        from nexus.models import ConsolidationDepth
-        self.nexus.consolidation_engine.consolidate(depth=ConsolidationDepth.FULL)
+        """Run FULL consolidation on the SMRITI memory system."""
+        from smriti.models import ConsolidationDepth
+        self.smriti.consolidation_engine.consolidate(depth=ConsolidationDepth.FULL)
 
     def get_stats(self) -> Dict:
         base = super().get_stats()
-        base.update(self.nexus.stats())
+        base.update(self.smriti.stats())
         return base

@@ -1,5 +1,5 @@
 """
-NEXUS v2 — Consolidation Engine.
+SMRITI v2 — Consolidation Engine.
 Background processing inspired by sleep-based memory consolidation.
 8 processes: spaced repetition, chunking, reflection, forgetting,
 cross-referencing, skill extraction, conflict resolution, palace defrag.
@@ -16,14 +16,14 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 
-from nexus.models import (
+from smriti.models import (
     ConsolidationDepth, Memory, MemorySource, MemoryStatus,
-    MemoryTombstone, NexusConfig, Skill, SalienceScore,
+    MemoryTombstone, SmritiConfig, Skill, SalienceScore,
 )
-from nexus.episode_buffer import EpisodeBuffer
-from nexus.palace import SemanticPalace
-from nexus.vector_store import VectorStore
-from nexus.llm_interface import LLMInterface
+from smriti.episode_buffer import EpisodeBuffer
+from smriti.palace import SemanticPalace
+from smriti.vector_store import VectorStore
+from smriti.llm_interface import LLMInterface
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ class ConsolidationEngine:
         palace: SemanticPalace,
         vector_store: VectorStore,
         llm: LLMInterface,
-        config: NexusConfig,
+        config: SmritiConfig,
     ):
         self.buffer = episode_buffer
         self.palace = palace
@@ -598,7 +598,7 @@ class ConsolidationEngine:
 
     def _merge_rooms(self, keeper: Room, merged: Room):
         """Merge two overlapping rooms into one."""
-        from nexus.palace import Room
+        from smriti.palace import Room
         # Move all memories from merged to keeper
         for mid in merged.memory_ids:
             if mid in self.palace.memories:

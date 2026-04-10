@@ -109,7 +109,7 @@ class BenchmarkHarness:
         ingest_time = time.time() - ingest_start
         logger.info(f"  Ingested {total_messages} messages in {ingest_time:.1f}s")
 
-        # Phase 1.5: Optional consolidation (NEXUS only)
+        # Phase 1.5: Optional consolidation (SMRITI only)
         consolidation_time = 0.0
         if self.consolidate and hasattr(system, 'run_consolidation'):
             logger.info(f"  Running consolidation...")

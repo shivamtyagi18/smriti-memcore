@@ -1,7 +1,7 @@
-"""Tests for nexus.metrics — counters, gauges, histograms, export."""
+"""Tests for smriti.metrics — counters, gauges, histograms, export."""
 
 import pytest
-from nexus.metrics import NexusMetrics
+from smriti.metrics import SmritiMetrics
 
 
 class TestCounter:
@@ -71,10 +71,10 @@ class TestPrometheusExport:
         metrics.encode_latency.observe(50.0)
 
         text = metrics.prometheus()
-        assert "nexus_encode_total 3" in text
-        assert "nexus_memories 10" in text
-        assert "nexus_encode_latency_ms_count 1" in text
+        assert "smriti_encode_total 3" in text
+        assert "smriti_memories 10" in text
+        assert "smriti_encode_latency_ms_count 1" in text
 
     def test_empty_prometheus(self, metrics):
         text = metrics.prometheus()
-        assert "nexus_encode_total 0" in text
+        assert "smriti_encode_total 0" in text

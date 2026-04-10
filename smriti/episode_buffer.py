@@ -1,5 +1,5 @@
 """
-NEXUS v2 — Episode Buffer.
+SMRITI v2 — Episode Buffer.
 Time-ordered event log with salience scores, trajectory tracking, 
 and reflection annotations. SQLite-backed for persistence.
 """
@@ -14,8 +14,8 @@ import threading
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from nexus.models import Episode, MemorySource, SalienceScore
-from nexus.vector_store import VectorStore
+from smriti.models import Episode, MemorySource, SalienceScore
+from smriti.vector_store import VectorStore
 
 logger = logging.getLogger(__name__)
 

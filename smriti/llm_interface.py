@@ -1,5 +1,5 @@
 """
-NEXUS v2 — LLM Interface.
+SMRITI v2 — LLM Interface.
 Abstraction layer for LLM calls. Primary: Ollama (local Mistral/CodeLlama).
 Optional: OpenAI, Gemini for evaluation judging.
 """
@@ -43,7 +43,7 @@ class LLMInterface:
         self.openai_api_key = openai_api_key
         self.anthropic_api_key = anthropic_api_key
         self.gemini_api_key = gemini_api_key
-        self._metrics = metrics  # Optional NexusMetrics instance
+        self._metrics = metrics  # Optional SmritiMetrics instance
 
     # ── Core Generation ──────────────────────────────────
 

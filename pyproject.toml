@@ -3,7 +3,7 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "nexus-memory"
+name = "smriti-memcore"
 version = "1.0.1"
 description = "A neuro-inspired memory architecture for AI agents — combines a Semantic Palace graph, capacity-bounded Working Memory, and asynchronous consolidation."
 readme = "README.md"
@@ -53,11 +53,11 @@ mcp = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/shivamtyagi18/nexus-memory"
-Repository = "https://github.com/shivamtyagi18/nexus-memory"
-Issues = "https://github.com/shivamtyagi18/nexus-memory/issues"
+Homepage = "https://github.com/shivamtyagi18/smriti-memcore"
+Repository = "https://github.com/shivamtyagi18/smriti-memcore"
+Issues = "https://github.com/shivamtyagi18/smriti-memcore/issues"
 Paper = "https://doi.org/10.13140/RG.2.2.25477.82407"
 
 [tool.setuptools.packages.find]
-include = ["nexus*"]
+include = ["smriti*"]
 exclude = ["tests*", "benchmarks*", "baselines*", "paper*", "results*", "data*", "venv*"]

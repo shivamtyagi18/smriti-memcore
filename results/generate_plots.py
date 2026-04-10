@@ -13,12 +13,12 @@ def generate_plots(input_file, output_dir):
     system_names = list(systems.keys())
     
     # Sort systems in a logical order for presentation
-    display_order = ['NEXUS_v2', 'MemGPTStyle', 'Mem0Style', 'NaiveRAG', 'FullContext']
+    display_order = ['SMRITI_v2', 'MemGPTStyle', 'Mem0Style', 'NaiveRAG', 'FullContext']
     valid_systems = [s for s in display_order if s in system_names]
     
     # Colors for consistent styling
     colors = {
-        'NEXUS_v2': '#8B5CF6',     # Purple
+        'SMRITI_v2': '#8B5CF6',     # Purple
         'MemGPTStyle': '#3B82F6',  # Blue
         'Mem0Style': '#10B981',    # Green
         'NaiveRAG': '#F59E0B',     # Yellow/Orange

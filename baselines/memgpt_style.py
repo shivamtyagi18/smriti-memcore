@@ -14,8 +14,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from typing import Dict, List, Optional
 
 from baselines.base import BaseMemorySystem, MemoryResponse
-from nexus.vector_store import VectorStore
-from nexus.llm_interface import LLMInterface
+from smriti.vector_store import VectorStore
+from smriti.llm_interface import LLMInterface
 
 
 class MemGPTStyle(BaseMemorySystem):
