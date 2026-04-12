@@ -522,7 +522,7 @@ setInterval(()=>{if(document.visibilityState==='visible')refreshData().catch(()=
 
 def _read_palace(storage_path: str) -> dict:
     """Parse palace.json and return graph-ready dict."""
-    palace_file = Path(storage_path).expanduser() / "palace.json"
+    palace_file = Path(storage_path).expanduser() / "palace" / "palace.json"
     if not palace_file.exists():
         return {"nodes": [], "edges": [], "storage_path": str(palace_file)}
 

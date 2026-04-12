@@ -43,15 +43,15 @@ PYTHON="$VENV_DIR/bin/python3"
 
 # ── 2. Install package into venv ──────────────────────────────────────────────
 
-info "Installing smriti-memory[mcp]..."
-"$PYTHON" -m pip install "smriti-memory[mcp]" --quiet --upgrade
+info "Installing smriti-memcore[mcp]..."
+"$PYTHON" -m pip install "smriti-memcore[mcp]" --quiet --upgrade
 # Ensure mcp is installed even if the PyPI release pre-dates the extra
 "$PYTHON" -c "import mcp" 2>/dev/null || "$PYTHON" -m pip install "mcp>=1.0.0" --quiet
-success "smriti-memory[mcp] installed"
+success "smriti-memcore[mcp] installed"
 
 # Verify imports
-"$PYTHON" -c "import smriti" 2>/dev/null \
-    || error "smriti not importable after install — check pip output above."
+"$PYTHON" -c "import smriti_memcore" 2>/dev/null \
+    || error "smriti_memcore not importable after install — check pip output above."
 "$PYTHON" -c "import mcp" 2>/dev/null \
     || error "mcp not importable after install — check pip output above."
 
