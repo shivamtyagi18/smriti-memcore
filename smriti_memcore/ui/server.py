@@ -511,7 +511,6 @@ function showTab(tab){
 
 // ── Boot ────────────────────────────────────────────────────────
 refreshData().catch(console.error);
-setInterval(()=>{if(document.visibilityState==='visible')refreshData().catch(()=>{});},15000);
 </script>
 </body>
 </html>
