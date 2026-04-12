@@ -467,6 +467,11 @@ class SemanticPalace:
                     reflection_level=mdata.get("reflection_level", 0),
                     associations=mdata.get("associations", []),
                     metadata=mdata.get("metadata", {}),
+                    # Spaced-repetition state — restored from disk
+                    next_review=datetime.fromisoformat(mdata["next_review"]) if mdata.get("next_review") else None,
+                    consecutive_successful_reviews=mdata.get("consecutive_successful_reviews", 0),
+                    # Conflict tracking
+                    superseded_by=mdata.get("superseded_by"),
                 )
                 self.memories[mid] = memory
 

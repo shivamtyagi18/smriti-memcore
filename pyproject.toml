@@ -52,6 +52,9 @@ mcp = [
     "mcp>=1.0.0",
 ]
 
+[project.scripts]
+smriti_ui = "smriti_memcore.ui.__main__:main"
+
 [project.urls]
 Homepage = "https://github.com/shivamtyagi18/smriti-memcore"
 Repository = "https://github.com/shivamtyagi18/smriti-memcore"
