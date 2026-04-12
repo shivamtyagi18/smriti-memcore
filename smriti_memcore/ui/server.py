@@ -543,6 +543,7 @@ def _read_palace(storage_path: str) -> dict:
             "id": mem["id"],
             "content": mem["content"],
             "room": room_by_id.get(mem.get("room_id", ""), "general"),
+            "room_id": mem.get("room_id", ""),
             "strength": round(mem.get("strength", 1.0), 4),
             "salience": round(composite, 4),
             "status": mem.get("status", "active"),
@@ -555,15 +556,25 @@ def _read_palace(storage_path: str) -> dict:
     edges = []
     room_members: dict = {}
     for n in nodes:
-        room_members.setdefault(n["room"], []).append(n["id"])
-    for room, members in room_members.items():
+        room_members.setdefault(n["room_id"], []).append(n["id"])
+        
+    for room_id, members in room_members.items():
         for i in range(len(members)):
             for j in range(i + 1, len(members)):
-                edges.append({"from": members[i], "to": members[j], "weight": 0.65, "room": room})
+                edges.append({"from": members[i], "to": members[j], "weight": 0.65, "room": room_by_id.get(room_id, "general")})
 
-    # Also add explicit palace edges
+    # Also add explicit palace edges (bridges between rooms)
+    # The JSON contract outputs source/target as room IDs. We bridge the first/strongest memory of each.
     for edge in raw.get("edges", []):
-        edges.append({"from": edge.get("from"), "to": edge.get("to"), "weight": edge.get("weight", 0.7), "room": "cross"})
+        src_room = edge.get("source")
+        tgt_room = edge.get("target")
+        weight = edge.get("strength", 0.7)
+        
+        if src_room in room_members and tgt_room in room_members:
+            # Create a visual bridge linking the first memory of both rooms
+            src_mem = room_members[src_room][0]
+            tgt_mem = room_members[tgt_room][0]
+            edges.append({"from": src_mem, "to": tgt_mem, "weight": weight, "room": "cross"})
 
     return {
         "nodes": nodes,
