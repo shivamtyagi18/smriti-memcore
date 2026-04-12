@@ -170,6 +170,11 @@ class Memory:
             "access_count": self.access_count,
             "reflection_level": self.reflection_level,
             "metadata": self.metadata,
+            # Spaced-repetition state — must survive save/reload
+            "next_review": self.next_review.isoformat() if self.next_review else None,
+            "consecutive_successful_reviews": self.consecutive_successful_reviews,
+            # Conflict tracking
+            "superseded_by": self.superseded_by,
         }
 
 

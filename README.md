@@ -66,7 +66,7 @@ The script will:
 
 **Then restart Claude Code.** Verify with `/mcp` — `smriti` should appear as connected.
 
-**Available tools (10):**
+**Available tools (11):**
 
 | Tool | Description |
 |---|---|
@@ -80,6 +80,7 @@ The script will:
 | `smriti_consolidate` | Run a consolidation cycle |
 | `smriti_stats` | System-wide statistics |
 | `smriti_get_suggestions` | Proactive insights from background consolidation |
+| `smriti_open_ui` | Launch the visual Memory Browser in the default web browser |
 
 **LLM options** — set during install or via environment variables:
 
@@ -224,6 +225,23 @@ See [`examples/langchain_agent.py`](examples/langchain_agent.py) or [`examples/q
 #### Claude Code (MCP Server)
 
 See [Quick Start — Claude Code (MCP)](#quick-start--claude-code-mcp) above for one-command setup.
+
+### Memory Browser UI
+
+SMRITI ships with a native, zero-dependency visualizer for traversing the Semantic Palace graph.
+
+```bash
+smriti_ui --storage ~/.smriti/global --port 7799
+```
+
+**Features:**
+- **Zero dependencies:** Built entirely with Python's standard `http.server` and D3.js — no Node.js/NPM needed.
+- **Backwards Compatible:** Instantly works with your existing `palace.json` created by older versions of SMRITI. Just point `--storage` to your existing directory.
+- **Interactive Graph:** Navigate the Semantic Palace using a force-directed network view or clustered room topology.
+- **Searchable Dashboard:** Instantly filter your stored knowledge by content, room, and system state.
+- **Real-time Statistics:** Track average memory strength, composite salience, and architectural distribution.
+
+*(If using without pip installation, run `python -m smriti_memcore.ui` from the source root).*
 
 ---
 

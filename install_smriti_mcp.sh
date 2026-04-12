@@ -131,7 +131,7 @@ if "mcpServers" not in config:
 
 config["mcpServers"]["smriti"] = {
     "command": "$PYTHON",
-    "args": ["-m", "smriti.integrations.mcp_server"],
+    "args": ["-m", "smriti_memcore.integrations.mcp_server"],
     "env": {
         "PYTHONPATH": "",
         "SMRITI_STORAGE_PATH": "$STORAGE_PATH",
@@ -154,7 +154,7 @@ import os
 os.environ['SMRITI_STORAGE_PATH'] = '/tmp/smriti_install_test'
 os.environ['SMRITI_LLM_MODEL'] = '$LLM_MODEL'
 os.environ['SMRITI_LLM_API_KEY'] = '$LLM_API_KEY'
-from smriti.integrations.mcp_server import build_smriti_config
+from smriti_memcore.integrations.mcp_server import build_smriti_config
 cfg = build_smriti_config()
 assert cfg.llm_model == '$LLM_MODEL'
 print('ok')

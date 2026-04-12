@@ -3,7 +3,7 @@ SMRITI MCP Server.
 Exposes the SMRITI memory system as a Claude Code MCP server via stdio transport.
 
 Usage:
-    python -m smriti.integrations.mcp_server
+    python -m smriti_memcore.integrations.mcp_server
 
 Environment variables:
     SMRITI_STORAGE_PATH   Where to persist data (default: ~/.smriti/global)
@@ -25,7 +25,7 @@ try:
 except ImportError:
     raise ImportError(
         "To use the SMRITI MCP server, install the mcp extra:\n"
-        "pip install smriti-memory[mcp]"
+        "pip install smriti-memcore[mcp]"
     )
 
 from smriti_memcore.core import SMRITI
@@ -184,8 +184,10 @@ def smriti_how_well_do_i_know(topic: str) -> Dict[str, Any]:
     for the decision — these are separate MetaMemory methods.
     """
     try:
-        conf = _smriti.meta_memory.confidence_map(topic)
+        # Call decision first — it internally calls confidence_map() once
         decision = _smriti.meta_memory.should_recall_or_ask(topic)
+        # Then call confidence_map() once more for the dimension breakdown
+        conf = _smriti.meta_memory.confidence_map(topic)
         return {
             "coverage": conf.coverage,
             "freshness": conf.freshness,
@@ -329,6 +331,24 @@ def smriti_get_suggestions() -> List[Dict[str, Any]]:
         return [serialize_memory(s) for s in suggestions]
     except Exception as e:
         return [{"error": str(e)}]
+
+
+@mcp_server.tool()
+def smriti_open_ui(port: int = 7799) -> Dict[str, Any]:
+    """
+    Launch the interactive Memory Browser UI in the user's default web browser.
+
+    Use this when the user asks to see, visualize, or browse their memories.
+    The UI runs locally and provides a visual graph of the Semantic Palace.
+    """
+    try:
+        from smriti_memcore.ui.server import launch
+        # Launch non-blocking (daemon thread runs parallel to MCP server)
+        # It automatically opens the browser window
+        launch(storage_path=_smriti.config.storage_path, port=port, open_browser=True, blocking=False)
+        return {"status": "success", "message": f"Memory Browser UI launching at http://127.0.0.1:{port}"}
+    except Exception as e:
+        return {"error": str(e)}
 
 
 # ── Startup ───────────────────────────────────────────────────────────────────
