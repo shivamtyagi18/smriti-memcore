@@ -576,11 +576,10 @@ def _read_palace(storage_path: str) -> dict:
 def _read_episodes(storage_path: str) -> list:
     """Read episodes.db and return a list of episode dicts, newest first.
 
-    storage_path is pre-resolved by launch() — no expanduser() needed here.
     fetchall() materialises all rows into a Python list before conn.close(),
     so the for-loop runs safely after the finally block.
     """
-    db_file = Path(storage_path) / "episodes" / "episodes.db"
+    db_file = Path(storage_path).expanduser() / "episodes" / "episodes.db"
     if not db_file.exists():
         return []
 
