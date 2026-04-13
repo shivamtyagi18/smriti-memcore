@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import sqlite3
 import threading
 import webbrowser
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -570,6 +571,44 @@ def _read_palace(storage_path: str) -> dict:
         "storage_path": str(palace_file),
         "room_count": len(rooms),
     }
+
+
+def _read_episodes(storage_path: str) -> list:
+    """Read episodes.db and return a list of episode dicts, newest first.
+
+    storage_path is pre-resolved by launch() — no expanduser() needed here.
+    fetchall() materialises all rows into a Python list before conn.close(),
+    so the for-loop runs safely after the finally block.
+    """
+    db_file = Path(storage_path) / "episodes" / "episodes.db"
+    if not db_file.exists():
+        return []
+
+    conn = sqlite3.connect(db_file)
+    conn.row_factory = sqlite3.Row  # enables named column access: row["salience_json"] not row[N]
+    try:
+        rows = conn.execute(
+            "SELECT id, content, timestamp, source, salience_json, consolidated "
+            "FROM episodes ORDER BY timestamp DESC"
+        ).fetchall()  # fetchall() returns a plain list — safe to use after conn.close()
+    finally:
+        conn.close()
+
+    episodes = []
+    for row in rows:
+        try:
+            salience = json.loads(row["salience_json"] or "{}").get("composite", 0.0)
+        except (json.JSONDecodeError, TypeError):
+            salience = 0.0
+        episodes.append({
+            "id":           row["id"],
+            "content":      row["content"],
+            "timestamp":    row["timestamp"],
+            "source":       row["source"],
+            "salience":     salience,
+            "consolidated": bool(row["consolidated"]),  # SQLite stores 0/1 integers
+        })
+    return episodes
 
 
 # ── HTTP Handler ────────────────────────────────────────────────────────────────
