@@ -6,7 +6,7 @@ SMRITI combines a capacity-bounded Working Memory, a graph-based Semantic Palace
 
 > 📄 **Paper:** *SMRITI: A Scalable, Neuro-Inspired Architecture for Long-Term Event Memory in LLM Agents* — Shivam Tyagi, 2025 — [DOI: 10.13140/RG.2.2.25477.82407](https://doi.org/10.13140/RG.2.2.25477.82407)
 
-[![PyPI](https://img.shields.io/pypi/v/smriti-memory.svg)](https://pypi.org/project/smriti-memory/)
+[![PyPI](https://img.shields.io/pypi/v/smriti-memcore.svg)](https://pypi.org/project/smriti-memcore/)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
@@ -54,12 +54,12 @@ The fastest way to use SMRITI is as a persistent memory layer for [Claude Code](
 **Run the install script:**
 
 ```bash
-bash <(curl -s https://raw.githubusercontent.com/shivamtyagi18/smriti-memory/main/install_smriti_mcp.sh)
+bash <(curl -s https://raw.githubusercontent.com/shivamtyagi18/smriti-memcore/main/install_smriti_mcp.sh)
 ```
 
 The script will:
 - Create a dedicated venv at `~/.smriti/venv`
-- Install `smriti-memory` into it
+- Install `smriti-memcore[mcp]` into it
 - Prompt for your LLM choice and API key
 - Register the MCP server in `~/.claude.json`
 - Optionally configure automatic memory hooks
@@ -96,20 +96,20 @@ The script will:
 ## Installation (Python Library)
 
 ```bash
-pip install smriti-memory
+pip install smriti-memcore
 ```
 
 With optional **FAISS** accelerated vector search:
 
 ```bash
-pip install smriti-memory[faiss]
+pip install smriti-memcore[faiss]
 ```
 
 Or install from source:
 
 ```bash
-git clone https://github.com/shivamtyagi18/smriti-memory.git
-cd smriti-memory
+git clone https://github.com/shivamtyagi18/smriti-memcore.git
+cd smriti-memcore
 pip install -e .
 ```
 
@@ -381,7 +381,7 @@ python benchmarks/vector_benchmark.py
 ## Project Structure
 
 ```
-smriti-memory/
+smriti-memcore/
 ├── smriti/                 # Core library
 │   ├── __init__.py
 │   ├── core.py            # SMRITI orchestrator
@@ -398,7 +398,7 @@ smriti-memory/
 │   ├── metrics.py         # Observability: counters, gauges, histograms, Prometheus export
 │   └── integrations/      # Framework adapters
 │       ├── langchain_memory.py  # LangChain BaseMemory component
-│       └── mcp_server.py        # Claude Code MCP server (10 tools)
+│       └── mcp_server.py        # Claude Code MCP server (11 tools)
 ├── install_smriti_mcp.sh   # One-command Claude Code setup
 ├── tests/                 # 190 tests across 14 files
 ├── baselines/             # Baseline implementations for comparison
