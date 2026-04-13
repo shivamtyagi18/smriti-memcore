@@ -243,6 +243,27 @@ smriti_ui --storage ~/.smriti/global --port 7799
 
 *(If using without pip installation, run `python -m smriti_memcore.ui` from the source root).*
 
+### Obsidian Vault Integration
+
+Export the Semantic Palace to an [Obsidian](https://obsidian.md/) vault so its graph view mirrors your memory graph.
+
+```bash
+smriti_palace_to_obsidian --vault ~/path/to/your-vault/Palace
+```
+
+**How it maps:**
+
+| Semantic Palace | Obsidian |
+|---|---|
+| Room | `Palace/<topic-slug>.md` note |
+| Memory | Section inside room note (with strength/salience metadata) |
+| Room ↔ Room edge | `[[wikilink]]` between room notes |
+| `Palace/_index.md` | Overview table of all rooms and connections |
+
+**Workflow:** Re-run after each `smriti_consolidate` call to keep the vault in sync with updated rooms and connections. The `Palace/` folder is fully regenerated each run — do not edit those files manually.
+
+*(If using without pip installation, run `python -m smriti_memcore.palace_to_obsidian` from the source root).*
+
 ---
 
 ## Key API
