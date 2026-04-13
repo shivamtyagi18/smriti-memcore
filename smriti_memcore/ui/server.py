@@ -257,6 +257,7 @@ let simulation, svg, g, linkSel, nodeSel;
 let sortKey = 'strength', sortAsc = false;
 
 async function refreshData(){
+  episodesLoaded = false;
   const res = await fetch('/api/graph');
   const data = await res.json();
   graphData = data;
@@ -525,11 +526,41 @@ function buildStats(data){
 
 // ── Tabs ────────────────────────────────────────────────────────
 function showTab(tab){
-  ['graph','table','stats'].forEach(t=>{
+  ['graph','table','stats','episodes'].forEach(t=>{
     document.getElementById('tab-'+t).classList.toggle('active',t===tab);
-    document.getElementById('view-'+t).style.display=t===tab?(t==='graph'?'flex':'flex'):'none';
+    document.getElementById('view-'+t).style.display=t===tab?'flex':'none';
   });
   if(tab==='graph'&&window._nodes){buildGraph(graphData);}
+  if(tab==='episodes'&&!episodesLoaded){buildEpisodes();}
+}
+
+// ── Episode Feed ────────────────────────────────────────────────
+let episodesLoaded = false;
+
+async function buildEpisodes(){
+  try {
+    const res = await fetch('/api/episodes');
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const episodes = await res.json();
+    episodesLoaded = true;
+    const tbody = document.getElementById('episodes-body');
+    if(!episodes.length){
+      tbody.innerHTML='<tr><td colspan="5" style="color:var(--muted);text-align:center">No episodes found.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = episodes.map(ep=>`
+      <tr>
+        <td style="white-space:nowrap;font-family:var(--mono);font-size:11px">${ep.timestamp.replace('T',' ').slice(0,16)}</td>
+        <td>${ep.content}</td>
+        <td>${ep.source}</td>
+        <td>${ep.salience.toFixed(3)}</td>
+        <td><span class="${ep.consolidated?'status-ok':'status-pending'}">${ep.consolidated?'✓ consolidated':'⏳ pending'}</span></td>
+      </tr>`).join('');
+  } catch(err) {
+    console.error('buildEpisodes failed:', err);
+    document.getElementById('episodes-body').innerHTML=
+      '<tr><td colspan="5" style="color:var(--red)">Error loading episodes.</td></tr>';
+  }
 }
 
 // ── Boot ────────────────────────────────────────────────────────
