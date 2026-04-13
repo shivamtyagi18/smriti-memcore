@@ -116,6 +116,7 @@ _HTML = r"""<!DOCTYPE html>
     tr:hover td{background:var(--surface2);}
     .room-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;}
     .status-ok{color:var(--green);} .status-pin{color:var(--gold);}
+    .status-pending{background:rgba(245,158,11,.15);color:var(--gold);padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;}
 
     /* Stats view */
     #view-stats{flex:1;overflow:auto;display:none;padding:24px;}
@@ -162,6 +163,7 @@ _HTML = r"""<!DOCTYPE html>
   <div class="tab active" id="tab-graph" onclick="showTab('graph')">🏛️ Semantic Palace</div>
   <div class="tab" id="tab-table" onclick="showTab('table')">📋 Memory Table</div>
   <div class="tab" id="tab-stats" onclick="showTab('stats')">📊 Statistics</div>
+  <div class="tab" id="tab-episodes" onclick="showTab('episodes')">📼 Episode Feed</div>
 </div>
 
 <div class="main">
@@ -213,6 +215,26 @@ _HTML = r"""<!DOCTYPE html>
   <!-- STATS VIEW -->
   <div id="view-stats">
     <div id="stats-content"></div>
+  </div>
+
+  <!-- EPISODE FEED VIEW -->
+  <div id="view-episodes" style="display:none;flex:1;overflow:hidden;flex-direction:column;">
+    <div class="tbl-wrap">
+      <table id="episodes-table">
+        <thead>
+          <tr>
+            <th>Timestamp</th>
+            <th>Content</th>
+            <th>Source</th>
+            <th>Salience</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="episodes-body">
+          <tr><td colspan="5" style="color:var(--muted);text-align:center">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
 
