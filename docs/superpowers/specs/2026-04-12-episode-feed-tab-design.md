@@ -88,7 +88,7 @@ Initial CSS must be `display:none` to match the existing show/hide convention us
 | Column | Field | Notes |
 |--------|-------|-------|
 | Timestamp | `timestamp` | Formatted as `YYYY-MM-DD HH:MM`, newest first |
-| Content | `content` | Truncated at 120 chars; `title` attribute carries the full untruncated string |
+| Content | `content` | Full content, no truncation |
 | Source | `source` | Plain text |
 | Salience | `salience` | 3 decimal places |
 | Status | `consolidated` | Green `✓ consolidated` or amber `⏳ pending` badge |
