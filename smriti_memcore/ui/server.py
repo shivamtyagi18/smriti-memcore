@@ -630,6 +630,11 @@ class _Handler(BaseHTTPRequestHandler):
             body = json.dumps(data).encode()
             self._respond(200, "application/json", body)
 
+        elif path == "/api/episodes":
+            data = _read_episodes(self.storage_path)
+            body = json.dumps(data).encode()
+            self._respond(200, "application/json", body)
+
         elif path == "/api/health":
             body = json.dumps({"status": "ok", "storage": self.storage_path}).encode()
             self._respond(200, "application/json", body)

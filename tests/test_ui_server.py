@@ -94,3 +94,49 @@ def test_read_episodes_ordered_newest_first(tmp_path):
 def test_read_episodes_missing_db_returns_empty(tmp_path):
     result = _read_episodes(str(tmp_path))  # no episodes/ subdir
     assert result == []
+
+
+import threading
+import urllib.request
+from http.server import HTTPServer
+from smriti_memcore.ui.server import _Handler
+
+
+def _start_server(storage_path: str, port: int):
+    """Start a test UI server in a daemon thread."""
+    class Handler(_Handler):
+        pass
+    Handler.storage_path = storage_path
+    server = HTTPServer(("127.0.0.1", port), Handler)
+    t = threading.Thread(target=server.serve_forever, daemon=True)
+    t.start()
+    return server
+
+
+def test_api_episodes_endpoint_returns_json(tmp_path):
+    storage = _make_db(tmp_path, [
+        ("id-1", "test content", "2026-04-12T10:00:00", '{"composite":0.4}',
+         "user_stated", None, 0, None, 1, None),
+    ])
+    server = _start_server(storage, 17799)
+    try:
+        with urllib.request.urlopen("http://127.0.0.1:17799/api/episodes") as resp:
+            assert resp.status == 200
+            assert "application/json" in resp.headers["Content-Type"]
+            data = json.loads(resp.read())
+            assert isinstance(data, list)
+            assert len(data) == 1
+            assert data[0]["id"] == "id-1"
+            assert data[0]["consolidated"] is True
+    finally:
+        server.shutdown()
+
+
+def test_api_episodes_empty_when_no_db(tmp_path):
+    server = _start_server(str(tmp_path), 17800)
+    try:
+        with urllib.request.urlopen("http://127.0.0.1:17800/api/episodes") as resp:
+            data = json.loads(resp.read())
+            assert data == []
+    finally:
+        server.shutdown()
