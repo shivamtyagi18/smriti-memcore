@@ -66,7 +66,7 @@ The script will:
 
 **Then restart Claude Code.** Verify with `/mcp` — `smriti` should appear as connected.
 
-**Available tools (11):**
+**Available tools (12):**
 
 | Tool | Description |
 |---|---|
@@ -81,6 +81,7 @@ The script will:
 | `smriti_stats` | System-wide statistics |
 | `smriti_get_suggestions` | Proactive insights from background consolidation |
 | `smriti_open_ui` | Launch the visual Memory Browser in the default web browser |
+| `smriti_sync_obsidian` | Export the Semantic Palace to an Obsidian vault |
 
 **LLM options** — set during install or via environment variables:
 
@@ -247,10 +248,6 @@ smriti_ui --storage ~/.smriti/global --port 7799
 
 Export the Semantic Palace to an [Obsidian](https://obsidian.md/) vault so its graph view mirrors your memory graph.
 
-```bash
-smriti_palace_to_obsidian --vault ~/path/to/your-vault/Palace
-```
-
 **How it maps:**
 
 | Semantic Palace | Obsidian |
@@ -259,6 +256,25 @@ smriti_palace_to_obsidian --vault ~/path/to/your-vault/Palace
 | Memory | Section inside room note (with strength/salience metadata) |
 | Room ↔ Room edge | `[[wikilink]]` between room notes |
 | `Palace/_index.md` | Overview table of all rooms and connections |
+
+**Via MCP tool (Claude Code):** After setting `SMRITI_OBSIDIAN_PATH` in your MCP server config, call the tool directly — no Bash needed:
+
+```
+smriti_sync_obsidian()
+# or with an explicit path:
+smriti_sync_obsidian(vault_path="~/path/to/your-vault/Palace")
+```
+
+Add to your MCP server env in `~/.claude.json`:
+```json
+"SMRITI_OBSIDIAN_PATH": "~/path/to/your-vault/Palace"
+```
+
+**Via CLI (non-MCP / scripting):**
+
+```bash
+smriti_palace_to_obsidian --vault ~/path/to/your-vault/Palace
+```
 
 **Workflow:** Re-run after each `smriti_consolidate` call to keep the vault in sync with updated rooms and connections. The `Palace/` folder is fully regenerated each run — do not edit those files manually.
 
@@ -419,7 +435,7 @@ smriti-memcore/
 │   ├── metrics.py         # Observability: counters, gauges, histograms, Prometheus export
 │   └── integrations/      # Framework adapters
 │       ├── langchain_memory.py  # LangChain BaseMemory component
-│       └── mcp_server.py        # Claude Code MCP server (11 tools)
+│       └── mcp_server.py        # Claude Code MCP server (12 tools)
 ├── install_smriti_mcp.sh   # One-command Claude Code setup
 ├── tests/                 # 190 tests across 14 files
 ├── baselines/             # Baseline implementations for comparison

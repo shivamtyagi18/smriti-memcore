@@ -111,6 +111,12 @@ fi
 read -rp "Memory storage path [~/.smriti/global]: " STORAGE_PATH
 STORAGE_PATH="${STORAGE_PATH:-~/.smriti/global}"
 
+echo ""
+echo "SMRITI can export your Semantic Palace to an Obsidian vault (optional)."
+echo "This enables the smriti_sync_obsidian MCP tool and Obsidian graph view."
+echo ""
+read -rp "Obsidian vault Palace directory (sets SMRITI_OBSIDIAN_PATH, leave blank to skip): " OBSIDIAN_PATH
+
 # ── 4. Patch ~/.claude.json ───────────────────────────────────────────────────
 
 info "Registering smriti MCP server in ~/.claude.json..."
@@ -129,15 +135,21 @@ else:
 if "mcpServers" not in config:
     config["mcpServers"] = {}
 
+env = {
+    "PYTHONPATH": "",
+    "SMRITI_STORAGE_PATH": "$STORAGE_PATH",
+    "SMRITI_LLM_MODEL": "$LLM_MODEL",
+    "SMRITI_LLM_API_KEY": "$LLM_API_KEY",
+}
+
+obsidian_path = "$OBSIDIAN_PATH".strip()
+if obsidian_path:
+    env["SMRITI_OBSIDIAN_PATH"] = obsidian_path
+
 config["mcpServers"]["smriti"] = {
     "command": "$PYTHON",
     "args": ["-m", "smriti_memcore.integrations.mcp_server"],
-    "env": {
-        "PYTHONPATH": "",
-        "SMRITI_STORAGE_PATH": "$STORAGE_PATH",
-        "SMRITI_LLM_MODEL": "$LLM_MODEL",
-        "SMRITI_LLM_API_KEY": "$LLM_API_KEY",
-    },
+    "env": env,
 }
 
 with open(claude_json, "w") as f:

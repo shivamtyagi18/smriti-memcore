@@ -351,6 +351,77 @@ def smriti_open_ui(port: int = 7799) -> Dict[str, Any]:
         return {"error": str(e)}
 
 
+@mcp_server.tool()
+def smriti_sync_obsidian(vault_path: str = "") -> Dict[str, Any]:
+    """
+    Export the current Semantic Palace to an Obsidian vault.
+
+    Writes one .md per room + _index.md to vault_path.
+    Safe to re-run — overwrites Palace/ cleanly.
+    Call this after smriti_consolidate to keep the Obsidian vault in sync.
+
+    vault_path: output directory inside the Obsidian vault.
+                If omitted, falls back to the SMRITI_OBSIDIAN_PATH env var.
+                Returns an error if neither is set.
+    Returns: { status, rooms_written, files_written, vault_path }
+    """
+    try:
+        import json
+        from pathlib import Path
+
+        from smriti_memcore.palace_to_obsidian import (
+            build_room_slug_map,
+            render_index,
+            render_room_note,
+        )
+
+        resolved = vault_path or os.environ.get("SMRITI_OBSIDIAN_PATH", "")
+        if not resolved:
+            return {
+                "error": (
+                    "No vault path provided. Either pass vault_path or set the "
+                    "SMRITI_OBSIDIAN_PATH environment variable in your MCP server config."
+                )
+            }
+
+        # Persist in-memory state first — consolidate doesn't call save()
+        _smriti.save()
+
+        palace_file = Path(_smriti.config.storage_path) / "palace" / "palace.json"
+        vault_dir = Path(resolved).expanduser()
+
+        with open(palace_file) as f:
+            palace = json.load(f)
+
+        rooms: dict = palace.get("rooms", {})
+        memories: dict = palace.get("memories", {})
+        slug_map = build_room_slug_map(rooms, memories)
+
+        vault_dir.mkdir(parents=True, exist_ok=True)
+
+        files_written = 0
+        for room_id, room in rooms.items():
+            slug = slug_map[room_id]
+            room_mems = [m for m in memories.values() if m.get("room_id") == room_id]
+            content = render_room_note(room_id, room, room_mems, slug_map)
+            (vault_dir / f"{slug}.md").write_text(content, encoding="utf-8")
+            files_written += 1
+
+        index_content = render_index(rooms, slug_map, memories)
+        (vault_dir / "_index.md").write_text(index_content, encoding="utf-8")
+        files_written += 1
+
+        return {
+            "status": "success",
+            "rooms_written": len(rooms),
+            "files_written": files_written,
+            "vault_path": str(vault_dir),
+        }
+    except Exception as e:
+        logger.error(f"smriti_sync_obsidian failed: {e}")
+        return {"error": str(e)}
+
+
 # ── Startup ───────────────────────────────────────────────────────────────────
 
 def _startup():
@@ -360,7 +431,7 @@ def _startup():
     logger.info(f"Starting SMRITI MCP server (storage: {config.storage_path}, model: {config.llm_model})")
     _smriti = SMRITI(config=config)
     atexit.register(_smriti.save)
-    logger.info("SMRITI MCP server ready — 10 tools registered")
+    logger.info("SMRITI MCP server ready — 12 tools registered")
 
 
 if __name__ == "__main__":
