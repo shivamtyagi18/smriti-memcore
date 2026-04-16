@@ -1,17 +1,18 @@
 #!/usr/bin/env bash
-# install_smriti_mcp.sh — Register the SMRITI MCP server with Claude Code
+# install_smriti_mcp.sh — Register the SMRITI MCP server with Claude Code and Claude Desktop
 #
 # Usage:
 #   bash install_smriti_mcp.sh
 #
 # What it does:
 #   1. Creates a dedicated venv at ~/.smriti/venv
-#   2. Installs smriti-memory[mcp] into it
-#   3. Patches ~/.claude.json to register the smriti MCP server
-#   4. Patches ~/.claude/settings.json to add recall/encode hooks
-#   5. Patches ~/.claude/CLAUDE.md with SMRITI memory instructions
+#   2. Installs smriti-memcore[mcp] into it
+#   3. Patches ~/.claude.json to register the smriti MCP server (Claude Code)
+#   4. Patches Claude Desktop config if detected (absolute paths required)
+#   5. Patches ~/.claude/settings.json to add recall/encode hooks
+#   6. Patches ~/.claude/CLAUDE.md with SMRITI memory instructions
 #
-# Requirements: Python 3.9+, Claude Code
+# Requirements: Python 3.9+, Claude Code and/or Claude Desktop
 
 set -euo pipefail
 
@@ -158,7 +159,72 @@ with open(claude_json, "w") as f:
 print(f"[smriti] ✓ Written to {claude_json}")
 PYEOF
 
-# ── 5. Smoke test ─────────────────────────────────────────────────────────────
+# ── 5. Patch Claude Desktop config (if detected) ─────────────────────────────
+
+DESKTOP_CONFIG_MACOS="$HOME/Library/Application Support/Claude/claude_desktop_config.json"
+DESKTOP_CONFIG_LINUX="$HOME/.config/Claude/claude_desktop_config.json"
+
+if [[ -f "$DESKTOP_CONFIG_MACOS" ]]; then
+    DESKTOP_CONFIG="$DESKTOP_CONFIG_MACOS"
+elif [[ -f "$DESKTOP_CONFIG_LINUX" ]]; then
+    DESKTOP_CONFIG="$DESKTOP_CONFIG_LINUX"
+else
+    DESKTOP_CONFIG=""
+fi
+
+if [[ -n "$DESKTOP_CONFIG" ]]; then
+    echo ""
+    read -rp "Claude Desktop detected — also register smriti there? [Y/n]: " CONFIGURE_DESKTOP
+    CONFIGURE_DESKTOP="${CONFIGURE_DESKTOP:-Y}"
+
+    if [[ "$CONFIGURE_DESKTOP" =~ ^[Yy]$ ]]; then
+        info "Registering smriti MCP server in Claude Desktop config..."
+
+        # Claude Desktop does not expand ~ — resolve to absolute paths
+        ABS_STORAGE_PATH="${STORAGE_PATH/#\~/$HOME}"
+        ABS_OBSIDIAN_PATH="${OBSIDIAN_PATH/#\~/$HOME}"
+
+        "$PYTHON" - <<PYEOF
+import json, os
+
+desktop_config = "$DESKTOP_CONFIG"
+
+if os.path.exists(desktop_config):
+    with open(desktop_config) as f:
+        config = json.load(f)
+else:
+    config = {}
+
+if "mcpServers" not in config:
+    config["mcpServers"] = {}
+
+env = {
+    "PYTHONPATH": "",
+    "SMRITI_STORAGE_PATH": "$ABS_STORAGE_PATH",
+    "SMRITI_LLM_MODEL": "$LLM_MODEL",
+    "SMRITI_LLM_API_KEY": "$LLM_API_KEY",
+}
+
+obsidian_path = "$ABS_OBSIDIAN_PATH".strip()
+if obsidian_path:
+    env["SMRITI_OBSIDIAN_PATH"] = obsidian_path
+
+config["mcpServers"]["smriti"] = {
+    "command": "$PYTHON",
+    "args": ["-m", "smriti_memcore.integrations.mcp_server"],
+    "env": env,
+}
+
+with open(desktop_config, "w") as f:
+    json.dump(config, f, indent=2)
+
+print(f"[smriti] ✓ Written to {desktop_config}")
+PYEOF
+        success "Claude Desktop configured — restart it to activate smriti"
+    fi
+fi
+
+# ── 6. Smoke test ─────────────────────────────────────────────────────────────
 
 info "Verifying server starts..."
 if "$PYTHON" -c "
@@ -176,7 +242,7 @@ else
     echo "[smriti] ⚠ Could not verify server — check your LLM config after launch"
 fi
 
-# ── 6. Patch ~/.claude/settings.json with hooks ───────────────────────────────
+# ── 7. Patch ~/.claude/settings.json with hooks ───────────────────────────────
 
 echo ""
 echo "SMRITI can configure automatic memory hooks in ~/.claude/settings.json"
@@ -271,7 +337,7 @@ with open(settings_path, "w") as f:
 print(f"[smriti] ✓ Hooks written to {settings_path}")
 PYEOF
 
-# ── 7. Patch ~/.claude/CLAUDE.md with SMRITI memory instructions ───────────────
+# ── 8. Patch ~/.claude/CLAUDE.md with SMRITI memory instructions ───────────────
 
 info "Adding SMRITI memory instructions to ~/.claude/CLAUDE.md..."
 
@@ -314,6 +380,6 @@ fi
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo " SMRITI MCP server registered successfully!"
-echo " Restart Claude Code to activate it."
-echo " Then run /mcp to confirm it appears."
+echo " • Claude Code:    restart, then run /mcp"
+echo " • Claude Desktop: restart, check Settings → Developer"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
