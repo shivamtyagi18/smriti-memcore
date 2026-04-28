@@ -44,6 +44,10 @@ PYTHON="$VENV_DIR/bin/python3"
 
 # ── 2. Install package into venv ──────────────────────────────────────────────
 
+info "Upgrading pip..."
+"$PYTHON" -m pip install --upgrade pip --quiet
+success "pip upgraded"
+
 info "Installing smriti-memcore[mcp]..."
 "$PYTHON" -m pip install "smriti-memcore[mcp]" --quiet --upgrade
 # Ensure mcp is installed even if the PyPI release pre-dates the extra
