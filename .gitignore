@@ -52,6 +52,7 @@ paper2.txt
 .gemini/
 .agent/
 _agent/
+.worktrees/
 
 # Test Databases
 langchain_smriti_db/
@@ -60,3 +61,4 @@ langchain_smriti_db/
 
 # MCP server config (machine-specific paths — create from .mcp.json.example)
 .mcp.json
+.superpowers/
