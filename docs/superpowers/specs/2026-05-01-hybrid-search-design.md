@@ -35,6 +35,7 @@ Self-contained SQLite FTS5 wrapper. Single responsibility: keyword candidate gen
 ```python
 class FTSIndex:
     def __init__(self, storage_path: str): ...
+    def needs_rebuild(self, active_count: int) -> bool: ...
     def add(self, memory_id: str, content: str) -> None: ...
     def remove(self, memory_id: str) -> None: ...
     def search(self, query: str, top_k: int = 20) -> List[Tuple[str, float]]: ...
@@ -53,13 +54,29 @@ CREATE VIRTUAL TABLE IF NOT EXISTS memories USING fts5(
 );
 ```
 
-`porter ascii` provides Porter stemming — "consolidating" matches "consolidate" — while preserving exact tokens like "YEP-293".
+`porter ascii` applies Porter stemming and lowercasing — "consolidating" matches "consolidate". Note: the tokenizer splits on non-alphanumeric characters, so "YEP-293" is stored as two tokens (`yep`, `293`). Queries for "YEP-293" go through the same tokenization and match correctly, but querying "YEP" alone will also match. This is acceptable behaviour for the use case.
 
-**Startup:** On `__init__`, if `fts.db` is missing or row count differs from active memory count, call `rebuild()`. Rebuild is a DELETE-all + bulk INSERT, fast at current scale (<10ms for 74 memories).
+**Startup (two-phase, orchestrated by `core.py`):**
 
-**WAL mode:** `PRAGMA journal_mode=WAL` on connection open — reads do not block writes.
+`FTSIndex.__init__` handles only connection setup:
+1. Check `os.path.exists(fts_db_path)` — if the file is absent, note it (SQLite will create an empty file on connect; the table will be missing, `needs_rebuild` returns True).
+2. Open SQLite connection with WAL mode (`PRAGMA journal_mode=WAL`).
+3. Execute `CREATE TABLE IF NOT EXISTS` — if this raises `sqlite3.DatabaseError` (corrupt file), delete `fts.db`, reconnect, and re-execute the CREATE.
+4. `__init__` does NOT call `rebuild()` — it has no access to the memory list.
 
-**`fts.db` is expendable:** it is a derived index, not source of truth. Deleting it triggers a clean rebuild on next startup.
+`FTSIndex.needs_rebuild(active_count)` returns `True` if the row count in the FTS table differs from `active_count`.
+
+`core.py` is responsible for calling `rebuild()` after construction (see below).
+
+**`rebuild(memories)` contract:** `memories` must be a list of ACTIVE memories only (`status == MemoryStatus.ACTIVE`). Executes DELETE-all + bulk INSERT. Fast at current scale (<10ms for 74 memories).
+
+**WAL mode:** `PRAGMA journal_mode=WAL` — reads do not block writes.
+
+**`fts.db` is expendable:** derived index, not source of truth. A corrupt or deleted `fts.db` is always self-healing via rebuild.
+
+**Query sanitization:** `FTSIndex.search()` does not validate or sanitize the query string. Malformed FTS5 expressions raise `sqlite3.OperationalError`, caught by the fallback in `RetrievalEngine.retrieve()` and treated as an empty FTS result.
+
+**`forget()` + startup interaction:** `fts_index.remove()` is called immediately on forget. If the process exits before `palace.json` persists the status change, the next startup will rebuild from the palace (which still has the memory as ACTIVE), re-adding the FTS entry. This is self-correcting — on the restart after persistence, the row count will again match and no rebuild is needed.
 
 ---
 
@@ -85,26 +102,47 @@ def _rrf_merge(
     return sorted(scores, key=lambda id: scores[id], reverse=True)[:pool_size]
 ```
 
+Called as `_rrf_merge(vector_candidates, fts_results, pool_size=top_k * 2)` — `top_k * 2` gives the scoring pipeline a pool twice the final target size, matching the previous vector-only behaviour.
+
 **Updated `retrieve()` flow:**
 
 ```
 Step 1a  palace.search(query, top_k=top_k*3)       → vector_candidates: List[Memory]
 Step 1b  fts_index.search(query, top_k=top_k*3)    → fts_results: List[(id, score)]
-Step 1c  _rrf_merge(vector_candidates, fts_results) → merged_ids: List[str]
-Step 1d  fetch Memory objects for FTS-only ids      → combined_pool: List[Memory]
+            [on exception: fts_results = [], log warning, continue]
+Step 1c  _rrf_merge(vector_candidates, fts_results,
+                    pool_size=top_k*2)              → merged_ids: List[str]
+Step 1d  build {id: Memory} map from vector_candidates;
+         for ids in merged_ids not in map, call palace.get_memory(id)
+           [None returns silently dropped — memory archived between search and fetch]
+           [exceptions from palace.get_memory() propagate — not caught here]
+         reconstruct combined_pool in merged_ids order
 Steps 2–5 unchanged: _score_memory(), testing effect, effort bonus, WorkingMemory
 ```
 
-Candidate pool size is `top_k * 3` for each source (up from `top_k * 2` for vector alone), giving the merged pool enough depth.
+Each source uses `top_k * 3` candidates so the union pool is deep enough before RRF narrows it to `top_k * 2` for scoring.
 
 ---
 
 ### Modified: `smriti_memcore/core.py` — `SMRITI`
 
-- `__init__()`: instantiate `FTSIndex(config.storage_path)`, pass to `RetrievalEngine`
-- `encode()`: call `fts_index.add(memory.id, memory.content)` after palace write
-- `forget()`: call `fts_index.remove(memory_id)` after palace archive
-- `close()` / `_atexit_save()`: call `fts_index.close()`
+- `__init__()`:
+  ```python
+  self.fts_index = FTSIndex(config.storage_path)
+  active_memories = [m for m in self.palace.memories.values()
+                     if m.status == MemoryStatus.ACTIVE]
+  if self.fts_index.needs_rebuild(len(active_memories)):
+      self.fts_index.rebuild(active_memories)
+  ```
+  Pass `fts_index` to `RetrievalEngine`.
+
+- `encode()`: call `fts_index.add(memory.id, memory.content)` after palace write; wrap in try/except — log on failure, never raise.
+
+- `forget()`: sets `memory.status = MemoryStatus.ARCHIVED` on the in-memory object (existing behaviour); then call `fts_index.remove(memory_id)` after the status mutation.
+
+- `close()`: call `fts_index.close()`.
+
+- `_atexit_save()`: call `fts_index.close()` inside the existing best-effort try/except — failure is silently swallowed, same as the existing atexit pattern.
 
 ---
 
@@ -118,7 +156,7 @@ smriti.encode(text)
   → EpisodeBuffer.add()
   → palace.add_memory(memory)          [existing]
   → vector_store.add(memory.id, text)  [existing]
-  → fts_index.add(memory.id, text)     [new, ~0.1ms]
+  → fts_index.add(memory.id, text)     [new, ~0.1ms, non-fatal on failure]
 ```
 
 ### Recall
@@ -128,8 +166,11 @@ smriti.recall(query)
   → RetrievalEngine.retrieve(query)
       1a. vector_candidates = palace.search(query, top_k*3)
       1b. fts_results       = fts_index.search(query, top_k*3)
-      1c. merged_ids        = _rrf_merge(vector_candidates, fts_results)
-      1d. combined_pool     = fetch Memory objects for merged_ids
+            [on exception: fts_results = [], log warning, continue]
+      1c. merged_ids        = _rrf_merge(vector_candidates, fts_results, pool_size=top_k*2)
+      1d. build id→Memory map from vector_candidates;
+          fetch missing via palace.get_memory() — drop None, let exceptions propagate;
+          reconstruct combined_pool in merged_ids order
       2.  score each: composite = cosine + decay + strength + salience  [unchanged]
       3.  sort, select top_k
       4.  testing effect reinforcement                                   [unchanged]
@@ -141,8 +182,8 @@ smriti.recall(query)
 
 ```
 smriti.forget(memory_id)
-  → palace.archive(memory_id)   [existing]
-  → fts_index.remove(memory_id) [new]
+  → memory.status = MemoryStatus.ARCHIVED   [existing — in-memory status mutation]
+  → fts_index.remove(memory_id)             [new]
 ```
 
 ---
@@ -159,33 +200,36 @@ except Exception:
     fts_results = []
 ```
 
-Same pattern for `fts_index.add()` in `encode()`: log and continue, never propagate to caller. A corrupt or missing `fts.db` is self-healing on next startup.
+Same pattern for `fts_index.add()` in `encode()`: log and continue, never propagate.
+
+`palace.get_memory()` returning `None` in Step 1d: silently dropped (normal TOCTOU — memory archived between FTS search and fetch). Exceptions from `palace.get_memory()` propagate normally; they indicate a broken palace state, not an FTS issue.
+
+Corrupt `fts.db` on startup: `__init__` catches `sqlite3.DatabaseError` on table creation, deletes the file, reconnects, re-creates the table. `core.py` then calls `needs_rebuild()` → `rebuild()`. Self-healing.
 
 ---
 
 ## Testing
 
-Three tests cover the meaningful behaviour:
-
 **1. Exact-term recall**
-Encode a memory containing a low-semantic-similarity token (e.g. `"YEP-293"`). Query `"YEP-293"`. Assert the memory appears in results. Optionally: assert it would _not_ appear in vector-only top-k by temporarily disabling FTS, confirming the test is meaningful.
+Encode a memory containing "YEP-293". Query "YEP-293". Assert the memory appears in results. Confirm meaningfulness by asserting it does not appear with FTS disabled (vector-only mode).
 
-**2. RRF merge correctness** (unit test `_rrf_merge` directly)
-- A memory present only in the FTS list appears in merged pool.
+**2. RRF merge correctness** (unit test `_rrf_merge` directly, no I/O)
+- A memory present only in the FTS list appears in the merged pool.
 - A memory present in both lists scores higher than one present in only one.
-- Verify with synthetic ranked lists, no I/O needed.
 
-**3. FTS rebuild idempotency**
-Call `rebuild()` twice with the same memory list. Assert row count equals input length both times. Assert `search()` returns identical results after each rebuild.
+**3. FTS rebuild idempotency** (uses SQLite `:memory:` path)
+Call `rebuild()` twice with the same ACTIVE memory list. Assert row count equals input length both times. Assert `search()` returns identical results after each rebuild.
 
-All tests use SQLite `":memory:"` path — no disk I/O, no test cleanup needed.
+Note: the startup corrupt-file recovery path (`sqlite3.DatabaseError` → delete → rebuild) requires a real temporary file path to exercise and is left as a manual integration test.
+
+All automated tests use SQLite `":memory:"` path — no disk I/O, no cleanup needed.
 
 ---
 
 ## Out of Scope
 
 - Indexing memory metadata, room IDs, or salience fields — `content` only
-- Exposing FTS5 operators (`NEAR`, `*`, `""`) to callers
+- Exposing FTS5 operators (`NEAR`, `*`, `""`) to callers — plain token matching only; malformed queries degrade gracefully via the error-handling fallback
 - Async FTS writes — synchronous is sufficient at this scale
 - Any changes to `palace.py`, `vector_store.py`, `models.py`, `consolidation.py`, or `mcp_server.py`
 
@@ -197,5 +241,5 @@ All tests use SQLite `":memory:"` path — no disk I/O, no test cleanup needed.
 |---|---|
 | `smriti_memcore/fts_index.py` | New |
 | `smriti_memcore/retrieval.py` | Add `fts_index` param, `_rrf_merge()`, update `retrieve()` |
-| `smriti_memcore/core.py` | Instantiate `FTSIndex`, wire into encode/forget/close |
-| `tests/test_fts_index.py` | New — 3 tests above |
+| `smriti_memcore/core.py` | Instantiate `FTSIndex`, call `needs_rebuild`/`rebuild`, wire into encode/forget/close |
+| `tests/test_fts_index.py` | New — 3 automated tests above |
