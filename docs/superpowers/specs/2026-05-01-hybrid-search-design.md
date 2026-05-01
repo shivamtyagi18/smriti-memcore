@@ -113,7 +113,7 @@ Step 1b  fts_index.search(query, top_k=top_k*3)    → fts_results: List[(id, sc
 Step 1c  _rrf_merge(vector_candidates, fts_results,
                     pool_size=top_k*2)              → merged_ids: List[str]
 Step 1d  build {id: Memory} map from vector_candidates;
-         for ids in merged_ids not in map, call palace.get_memory(id)
+         for each id in merged_ids not present in map, call palace.get_memory(id)
            [None returns silently dropped — memory archived between search and fetch]
            [exceptions from palace.get_memory() propagate — not caught here]
          reconstruct combined_pool in merged_ids order
